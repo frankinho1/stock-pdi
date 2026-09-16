@@ -120,18 +120,34 @@ section.panel.on{display:block}
 .focus-head .eyebrow{color:var(--brand)}
 .focus-head h2{font-size:25px; line-height:1.1; margin:1px 0 0;}
 .focus-head p{margin:7px 0 0; font-size:13.5px; color:var(--ink-2); max-width:70ch;}
-.focus-body{padding:20px 22px 20px; overflow-x:auto;}
-table.pivot{border-collapse:collapse; font-size:15px;}
-table.pivot th, table.pivot td{border:1px solid var(--line-2); padding:9px 15px; text-align:left; white-space:nowrap;}
-table.pivot thead th{background:var(--surface-3); font-family:var(--cond); font-size:15px; letter-spacing:.04em;
+.focus-body{padding:20px 22px 20px; display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start;}
+.fb-table{flex:0 1 auto; overflow-x:auto; max-width:100%;}
+.fb-chart{flex:1 1 340px; min-width:min(100%,300px); display:flex; flex-direction:column; gap:12px;}
+.ch-head{display:flex; align-items:flex-end; gap:12px; justify-content:space-between; flex-wrap:wrap;}
+.ch-head h3{font-size:18px; line-height:1.15;}
+.ch-head select{max-width:230px}
+.ch-wrap{position:relative}
+.ch-wrap svg{display:block; overflow:visible}
+.ch-tip{position:absolute; pointer-events:none; z-index:5; background:var(--ink); color:var(--bg);
+  font-size:12px; line-height:1.4; padding:6px 10px; border-radius:4px; white-space:nowrap;
+  font-variant-numeric:tabular-nums; opacity:0; transition:opacity .12s; transform:translate(-50%,-100%);
+  box-shadow:0 4px 14px rgba(0,0,0,.22);}
+.ch-tip.on{opacity:1}
+.ch-tip b{color:var(--bg); font-weight:700}
+.ch-empty{font-size:13px; color:var(--ink-3); padding:34px 14px; text-align:center;
+  border:1px dashed var(--line-2); border-radius:var(--r);}
+.ch-foot{font-size:12px; color:var(--ink-3); font-variant-numeric:tabular-nums;}
+table.pivot{border-collapse:collapse; font-size:14px;}
+table.pivot th, table.pivot td{border:1px solid var(--line-2); padding:8px 12px; text-align:left; white-space:nowrap;}
+table.pivot thead th{background:var(--surface-3); font-family:var(--cond); font-size:14px; letter-spacing:.04em;
   font-weight:700; text-align:center;}
-table.pivot td.num{text-align:right; font-variant-numeric:tabular-nums; font-family:var(--mono); font-size:14px;}
-table.pivot td.code{font-family:var(--mono); font-size:14px; font-weight:500;}
+table.pivot td.num{text-align:right; font-variant-numeric:tabular-nums; font-family:var(--mono); font-size:13px;}
+table.pivot td.code{font-family:var(--mono); font-size:13px; font-weight:500;}
 table.pivot tbody td:nth-child(2){font-weight:600}
 table.pivot tr.hot td.num{background:var(--warn-bg); color:var(--warn-ink); font-weight:600;}
 table.pivot tr.hot td.code{box-shadow:inset 3px 0 0 var(--warn-line)}
 table.pivot tr.tot td{background:var(--surface-2); font-weight:700; border-top:2px solid var(--line-2);}
-table.pivot tr.tot td.num{font-family:var(--mono); font-weight:700; font-size:15px;}
+table.pivot tr.tot td.num{font-family:var(--mono); font-weight:700; font-size:14px;}
 .focus-foot{display:flex; gap:18px 26px; flex-wrap:wrap; align-items:center; justify-content:space-between;
   padding:13px 22px 15px; border-top:1px solid var(--line); background:var(--surface-2);}
 .legend{font-size:13px; color:var(--ink-2); display:flex; align-items:center; gap:9px;}
@@ -274,9 +290,21 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
       <p>Se resaltan los niveles elevados de stock virtual en los almacenes para el seguimiento respectivo.</p>
     </div>
     <div class="focus-body">
-      <table class="pivot" id="tArea"><thead><tr>
-        <th>Etiquetas de fila</th><th>AREA</th><th>Suma de Valor libre util.</th><th>% del total</th><th>Materiales</th>
-      </tr></thead><tbody></tbody></table>
+      <div class="fb-table">
+        <table class="pivot" id="tArea"><thead><tr>
+          <th>Etiquetas de fila</th><th>AREA</th><th>Suma de Valor libre util.</th><th>% del total</th><th>Materiales</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+      <div class="fb-chart">
+        <div class="ch-head">
+          <div>
+            <p class="eyebrow">Evolutivo</p>
+            <h3 id="evolTit">Stock por día</h3>
+          </div>
+          <select id="evolSel" aria-label="Filtrar el evolutivo por área o almacén"></select>
+        </div>
+        <div class="ch-wrap" id="evolWrap"></div>
+      </div>
     </div>
     <div class="focus-foot">
       <span class="legend"><span class="swatch"></span> Nivel elevado de stock virtual · umbral S/ <b id="thrTxt">—</b></span>
@@ -411,12 +439,42 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
     <div class="msg" id="areaInfo"></div>
   </div>
 
+  <div class="panelcard hide" id="ghCard">
+    <h3>Publicación automática</h3>
+    <p style="font-size:13.5px;color:var(--ink-2);margin:0 0 13px">
+      Con esto el botón <b>Publicar para todos</b> sube los datos al repositorio solo, sin que tengas
+      que arrastrar archivos. El token se guarda únicamente en este navegador: no viaja al repositorio
+      ni queda en el código de la página.</p>
+    <div class="controls" style="margin-bottom:10px">
+      <label class="lbl">Usuario <input type="text" id="ghOwner" style="width:150px" placeholder="frankinho1"></label>
+      <label class="lbl">Repositorio <input type="text" id="ghRepo" style="width:150px" placeholder="stock-pdi"></label>
+      <label class="lbl">Rama <input type="text" id="ghBranch" style="width:90px" placeholder="main"></label>
+      <label class="lbl">Token <input type="password" id="ghToken" style="width:230px" placeholder="github_pat_…" autocomplete="off"></label>
+      <button class="btn" id="ghSave" type="button">Guardar</button>
+      <button class="btn" id="ghTest" type="button">Probar conexión</button>
+      <button class="btn" id="ghClear" type="button">Borrar token</button>
+    </div>
+    <div class="msg" id="ghMsg">Sin configurar: el botón de publicar te descargará los archivos para subirlos a mano.</div>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-size:13.5px;color:var(--ink-2)">Cómo crear el token</summary>
+      <ol class="steps" style="margin-top:9px">
+        <li>En GitHub: foto de perfil → <b>Settings</b> → abajo del todo, <b>Developer settings</b>.</li>
+        <li><b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
+        <li>Nombre cualquiera, expiración la que prefieras (al vencer hay que renovarlo).</li>
+        <li>En <i>Repository access</i>: <b>Only select repositories</b> → elige solo este repositorio.</li>
+        <li>En <i>Permissions → Repository permissions</i>: <b>Contents</b> = <b>Read and write</b>. Nada más.</li>
+        <li>Genera, copia el token y pégalo arriba. GitHub no vuelve a mostrarlo.</li>
+      </ol>
+    </details>
+  </div>
+
   <div class="panelcard">
     <div class="controls" style="margin-bottom:0">
       <label class="lbl">Fecha de corte <input type="date" id="inCorte"></label>
       <label class="lbl">Publicado por <input type="text" id="inBy" placeholder="Nombre" style="width:180px"></label>
       <label class="lbl">Umbral S/ <input type="number" id="inThr" step="50000" min="0" style="width:120px"></label>
       <button class="btn primary" id="btnPub" type="button" disabled>Publicar para todos</button>
+      <button class="btn hide" id="btnBajar" type="button" disabled>Descargar los datos</button>
       <button class="btn" id="btnLocal" type="button" disabled>Ver en mi pantalla</button>
       <button class="btn" id="btnFile" type="button">Descargar reporte (.html)</button>
     </div>
@@ -506,6 +564,7 @@ var CFG_DEF={
   cabeceras:{},
   claves:["ULE","COLGAJO","PODA","MENSULA","CRUCETA"]
 };
+D.hist=D.hist||{};             // fecha -> totales por almacén (el evolutivo)
 D.ordenes=D.ordenes||{};        // orden -> área
 D.areaDoc=D.areaDoc||{};        // documento -> área ya resuelta (el histórico)
 D.cfg=D.cfg||{};
@@ -691,6 +750,124 @@ function renderArea(){
   $("#thrTxt").textContent = t.toLocaleString("en-US");
   $("#thr").value=t; $("#inThr").value=t;
 }
+/* --- evolutivo de stock por día -----------------------------------------
+   Cada corte publicado deja una foto de los totales por almacén bajo su fecha.
+   Si un día se publica varias veces, la última sobrescribe: queda el dato del día.
+   Solo se guardan los seis totales de la tabla, nunca el detalle.            */
+function totalesPorAlmacen(stock){
+  var t={}; stock.forEach(function(r){ t[r[S_ALM]]=(t[r[S_ALM]]||0)+r[S_VAL]; });
+  Object.keys(t).forEach(function(k){ t[k]=Math.round(t[k]*100)/100; });
+  return t;
+}
+function evolOpciones(){
+  var alm={}, ar={};
+  D.stock.forEach(function(r){ alm[r[S_ALM]]=1; ar[area(r[S_ALM])]=1; });
+  Object.keys(D.hist||{}).forEach(function(f){
+    Object.keys(D.hist[f]).forEach(function(a){ alm[a]=1; ar[area(a)]=1; });
+  });
+  return {alm:Object.keys(alm).sort(), areas:Object.keys(ar).sort()};
+}
+function serieEvol(sel){
+  var dias=Object.keys(D.hist||{}).sort(), out=[];
+  dias.forEach(function(f){
+    var dia=D.hist[f], v=0;
+    Object.keys(dia).forEach(function(a){
+      if(!sel) v+=dia[a];
+      else if(sel.charAt(0)==="W"){ if(a===sel.slice(2)) v+=dia[a]; }
+      else if(area(a)===sel.slice(2)) v+=dia[a];
+    });
+    out.push({f:f, v:Math.round(v*100)/100});
+  });
+  return out;
+}
+function nombreSel(sel){
+  if(!sel) return "Total general";
+  return sel.charAt(0)==="W" ? sel.slice(2)+" · "+area(sel.slice(2)) : sel.slice(2);
+}
+function llenarEvolSel(){
+  var o=evolOpciones(), s=$("#evolSel"), prev=s.value;
+  var h='<option value="">Total general</option>';
+  if(o.areas.length) h+='<optgroup label="Por área">'+o.areas.map(function(a){
+    return '<option value="A:'+esc(a)+'">'+esc(a)+'</option>';}).join("")+'</optgroup>';
+  if(o.alm.length) h+='<optgroup label="Por almacén">'+o.alm.map(function(a){
+    return '<option value="W:'+esc(a)+'">'+esc(a)+' · '+esc(area(a))+'</option>';}).join("")+'</optgroup>';
+  s.innerHTML=h;
+  if(prev) s.value=prev;
+}
+function ejeY(min,max){
+  var span=max-min;
+  if(span<=0){ var p=Math.abs(max)*0.05||1; return {lo:max-p, hi:max+p}; }
+  return {lo:min-span*0.18, hi:max+span*0.18};
+}
+function renderEvol(){
+  var sel=$("#evolSel").value, datos=serieEvol(sel), w=$("#evolWrap");
+  $("#evolTit").textContent="Stock por día · "+nombreSel(sel);
+  if(datos.length<2){
+    w.innerHTML='<div class="ch-empty">El evolutivo necesita al menos dos cortes publicados.'+
+      (datos.length?' Por ahora hay uno: '+fdate(datos[0].f)+'.':'')+'</div>';
+    return;
+  }
+  var W=Math.round(Math.max(290, Math.min(780, w.clientWidth||520))), H=232, L=68, R=14, T=18, B=30;
+  var xs=datos.map(function(d){ return new Date(d.f+"T00:00:00").getTime(); });
+  var x0=xs[0], x1=xs[xs.length-1]; if(x1===x0) x1=x0+1;
+  var vs=datos.map(function(d){ return d.v; });
+  var e=ejeY(Math.min.apply(null,vs), Math.max.apply(null,vs));
+  var px=function(t){ return L+(t-x0)/(x1-x0)*(W-L-R); };
+  var py=function(v){ return T+(e.hi-v)/(e.hi-e.lo)*(H-T-B); };
+
+  var g="", ticks=4;
+  for(var i=0;i<=ticks;i++){
+    var v=e.lo+(e.hi-e.lo)*i/ticks, y=py(v);
+    g+='<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+
+       '" stroke="var(--line)" stroke-width="1"/>'+
+       '<text x="'+(L-9)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" '+
+       'fill="var(--ink-3)" font-family="var(--mono)">'+comp(v).replace("S/ ","")+'</text>';
+  }
+  var pts=datos.map(function(d,i){ return {x:px(xs[i]), y:py(d.v), d:d}; });
+  var linea=pts.map(function(p,i){ return (i?"L":"M")+p.x.toFixed(1)+" "+p.y.toFixed(1); }).join(" ");
+
+  var etx="";
+  [0, datos.length-1].forEach(function(i){
+    if(i===0&&datos.length<3) return;
+    etx+='<text x="'+pts[i].x.toFixed(1)+'" y="'+(H-B+18)+'" text-anchor="middle" '+
+      'font-size="11" fill="var(--ink-3)" font-family="var(--mono)">'+fdate(datos[i].f)+'</text>';
+  });
+  var ult=pts[pts.length-1];
+  var marcas=pts.map(function(p){
+    return '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.5" fill="var(--brand)" '+
+           'stroke="var(--surface)" stroke-width="2"/>';}).join("");
+
+  w.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Evolutivo de stock por día para '+
+    esc(nombreSel(sel))+'">'+g+
+    '<path d="'+linea+'" fill="none" stroke="var(--brand)" stroke-width="2" '+
+    'stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<line id="evolCross" x1="0" y1="'+T+'" x2="0" y2="'+(H-B)+'" stroke="var(--line-2)" '+
+    'stroke-width="1" stroke-dasharray="3 3" opacity="0"/>'+
+    marcas+
+    '<text x="'+(ult.x-6).toFixed(1)+'" y="'+(ult.y-12).toFixed(1)+'" text-anchor="end" font-size="12" '+
+    'font-weight="700" fill="var(--ink)" font-family="var(--mono)" paint-order="stroke" '+
+    'stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round">'+comp(ult.d.v)+'</text>'+
+    etx+
+    '<rect id="evolHit" x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-B)+'" fill="transparent"/>'+
+    '</svg><div class="ch-tip" id="evolTip"></div>'+
+    '<div class="ch-foot">'+datos.length+' cortes · del '+fdate(datos[0].f)+' al '+
+    fdate(datos[datos.length-1].f)+'</div>';
+
+  var svg=w.querySelector("svg"), tip=$("#evolTip"), cross=w.querySelector("#evolCross");
+  function mover(ev){
+    var r=svg.getBoundingClientRect(), esc2=W/r.width;
+    var mx=(ev.clientX-r.left)*esc2, mejor=0, dmin=1e9;
+    pts.forEach(function(p,i){ var d=Math.abs(p.x-mx); if(d<dmin){dmin=d; mejor=i;} });
+    var p=pts[mejor];
+    cross.setAttribute("x1",p.x); cross.setAttribute("x2",p.x); cross.setAttribute("opacity","1");
+    tip.innerHTML=fdate(p.d.f)+" · <b>"+money(p.d.v)+"</b>";
+    tip.style.left=(p.x/esc2)+"px"; tip.style.top=(p.y/esc2-10)+"px";
+    tip.classList.add("on");
+  }
+  svg.addEventListener("mousemove",mover);
+  svg.addEventListener("mouseleave",function(){ tip.classList.remove("on"); cross.setAttribute("opacity","0"); });
+}
+
 function repData(){
   var rows=stockRows(), alm=almList(), map={};
   rows.forEach(function(r){
@@ -750,6 +927,9 @@ $("#segMetric").addEventListener("click",function(e){
   $$("#segMetric button").forEach(function(x){x.classList.toggle("on",x===b);});
   renderRep();
 });
+$("#evolSel").addEventListener("change",renderEvol);
+var evolT=null;
+window.addEventListener("resize",function(){ clearTimeout(evolT); evolT=setTimeout(renderEvol,160); });
 $("#thrApply").addEventListener("click",function(){
   D.meta.threshold=parseFloat($("#thr").value)||0; renderArea();
 });
@@ -914,8 +1094,8 @@ function paint(){
   fillMovFilters();
   if(D.meta.movFrom&&!$("#fDesde").value) $("#fDesde").value=D.meta.movFrom;
   if(D.meta.movTo&&!$("#fHasta").value) $("#fHasta").value=D.meta.movTo;
-  pintarCfg(); pintarAreaInfo();
-  renderArea(); renderRep(); renderMat(); renderMov(); renderCur();
+  pintarCfg(); pintarAreaInfo(); llenarEvolSel();
+  renderArea(); renderEvol(); renderRep(); renderMat(); renderMov(); renderCur();
 }
 
 /* ---------- 04 ingesta ---------- */
@@ -1092,7 +1272,7 @@ function pintarAreaInfo(){
 }
 function pubReady(){
   var listo=!!(ST.pendS||ST.pendM||ST.pendO);
-  $("#btnPub").disabled=!listo; $("#btnLocal").disabled=!listo;
+  $("#btnPub").disabled=!listo; $("#btnLocal").disabled=!listo; $("#btnBajar").disabled=!listo;
 }
 function pmsg(t,cls){ var m=$("#pubMsg"); m.className="msg "+(cls||""); m.textContent=t; m.classList.remove("hide"); }
 function bar(p){ var b=$("#pubBar"); b.classList.remove("hide"); b.querySelector("i").style.width=p+"%"; }
@@ -1163,6 +1343,81 @@ function buildDoc(data){
     '&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">'+
     TPL_CSS+'<\/head><body>'+body+'<\/body><\/html>';
 }
+/* --- publicación directa al repositorio ---------------------------------
+   Un sitio estático no puede escribirse solo, pero la API de GitHub sí acepta
+   commits desde el navegador. El token lo pega la persona y vive únicamente en
+   este navegador (localStorage): nunca está en el código ni en el repositorio.
+   Se arma UN commit con los tres archivos, para que el sitio nunca quede a medio
+   camino con unos datos nuevos y otros viejos.                              */
+var GH_KEY="stockpdi_gh";
+function ghLeer(){
+  try{ return JSON.parse(localStorage.getItem(GH_KEY)||"{}")||{}; }catch(e){ return {}; }
+}
+function ghGuardar(c){
+  try{ localStorage.setItem(GH_KEY, JSON.stringify(c)); return true; }catch(e){ return false; }
+}
+function ghCfg(){
+  return { owner:$("#ghOwner").value.trim(), repo:$("#ghRepo").value.trim(),
+           branch:$("#ghBranch").value.trim()||"main", token:$("#ghToken").value.trim() };
+}
+function ghListo(c){ c=c||ghCfg(); return !!(c.owner&&c.repo&&c.token); }
+function ghMsg(t,cls){ var m=$("#ghMsg"); m.className="msg "+(cls||""); m.innerHTML=t; }
+
+function b64(txt){
+  var bytes=new TextEncoder().encode(txt), bin="", paso=0x8000;
+  for(var i=0;i<bytes.length;i+=paso) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+paso));
+  return btoa(bin);
+}
+function ghHead(c){
+  return {Authorization:"Bearer "+c.token, Accept:"application/vnd.github+json",
+          "X-GitHub-Api-Version":"2022-11-28"};
+}
+async function ghFalla(r){
+  var d=""; try{ d=(await r.json()).message||""; }catch(e){}
+  if(r.status===401) return "El token no es válido o expiró. Genera uno nuevo y vuelve a pegarlo.";
+  if(r.status===403) return "El token no tiene permiso de escritura sobre este repositorio "+
+    "(necesita Contents: Read and write).";
+  if(r.status===404) return "No se encontró el repositorio o la rama. Revisa usuario, repositorio y rama, "+
+    "y que el token incluya ese repositorio.";
+  if(r.status===409) return "Alguien más cambió el repositorio mientras publicabas. Vuelve a intentarlo.";
+  if(r.status===422) return "GitHub rechazó el contenido"+(d?": "+d:"")+".";
+  return "Error de GitHub ("+r.status+")"+(d?": "+d:"")+".";
+}
+async function ghApi(c, ruta, opts){
+  var r=await fetch("https://api.github.com/repos/"+c.owner+"/"+c.repo+ruta,
+    Object.assign({headers:ghHead(c)}, opts||{}));
+  if(!r.ok) throw new Error(await ghFalla(r));
+  return r.json();
+}
+/* un solo commit con los tres archivos */
+async function ghPublicar(c, archivos, mensaje, avance){
+  avance=avance||function(){};
+  avance(10,"Leyendo el estado del repositorio…");
+  var ref=await ghApi(c,"/git/ref/heads/"+encodeURIComponent(c.branch));
+  var commitBase=await ghApi(c,"/git/commits/"+ref.object.sha);
+  var blobs=[], i=0;
+  for(var k in archivos){
+    i++; avance(10+i*22, "Subiendo "+k+"…");
+    var b=await ghApi(c,"/git/blobs",{method:"POST",
+      headers:Object.assign({"Content-Type":"application/json"},ghHead(c)),
+      body:JSON.stringify({content:b64(archivos[k]), encoding:"base64"})});
+    blobs.push({path:"data/"+k, mode:"100644", type:"blob", sha:b.sha});
+  }
+  avance(80,"Armando el commit…");
+  var tree=await ghApi(c,"/git/trees",{method:"POST",
+    headers:Object.assign({"Content-Type":"application/json"},ghHead(c)),
+    body:JSON.stringify({base_tree:commitBase.tree.sha, tree:blobs})});
+  var commit=await ghApi(c,"/git/commits",{method:"POST",
+    headers:Object.assign({"Content-Type":"application/json"},ghHead(c)),
+    body:JSON.stringify({message:mensaje, tree:tree.sha, parents:[ref.object.sha]})});
+  avance(92,"Actualizando la rama…");
+  await ghApi(c,"/git/refs/heads/"+encodeURIComponent(c.branch),{method:"PATCH",
+    headers:Object.assign({"Content-Type":"application/json"},ghHead(c)),
+    body:JSON.stringify({sha:commit.sha})});
+  avance(100,"Publicado.");
+  return commit.sha;
+}
+
 /* arma el conjunto de datos nuevo a partir de lo cargado, sin tocar nada todavía */
 function armar(){
   var nd={meta:Object.assign({},D.meta), mats:Object.assign({},D.mats), stock:D.stock, mov:D.mov,
@@ -1183,6 +1438,11 @@ function armar(){
     var rg=rango(mg.rows);
     nd.meta.movFile=ST.pendM.name; nd.meta.movFrom=rg.from; nd.meta.movTo=rg.to;
   }
+  /* foto del día para el evolutivo: la clave es la fecha de corte, así que publicar
+     dos veces el mismo día deja la última, no dos puntos */
+  nd.hist=Object.assign({},D.hist);
+  if(nd.meta.stockDate) nd.hist[nd.meta.stockDate]=totalesPorAlmacen(nd.stock);
+
   /* con las órdenes y el histórico al día, se recalcula el área de TODO el historial:
      un IW39 nuevo puede resolver movimientos viejos que antes quedaron sin área */
   nd.mov=nd.mov.map(function(r){ return r.slice(); });
@@ -1201,9 +1461,17 @@ function resumen(a){
   if(a.conMov) p.push(a.nuevos.toLocaleString("en-US")+" movimientos nuevos, historial en "+
     a.nd.mov.length.toLocaleString("en-US"));
   if(a.conOrd) p.push(Object.keys(a.nd.ordenes).length.toLocaleString("en-US")+" órdenes conocidas");
+  if(a.conStock) p.push("evolutivo con "+Object.keys(a.nd.hist).length+" cortes");
   if(a.area) p.push("área resuelta en "+(a.nd.mov.length-a.area.sin).toLocaleString("en-US")+
     " de "+a.nd.mov.length.toLocaleString("en-US")+" movimientos");
   return p.join(" · ");
+}
+function datosComoArchivos(nd){
+  var base={meta:nd.meta, mats:nd.mats, stock:nd.stock, cfg:nd.cfg, hist:nd.hist};
+  base.meta.movRows=nd.mov.length;
+  return { "base.json":JSON.stringify(base),
+           "mov.json":JSON.stringify(nd.mov),
+           "areas.json":JSON.stringify({ordenes:nd.ordenes, areaDoc:nd.areaDoc}) };
 }
 function aplicar(a){
   D=a.nd; ST.pendS=null; ST.pendM=null; ST.pendO=null;
@@ -1222,19 +1490,26 @@ $("#btnPub").addEventListener("click",async function(){
     if(!ST.areasListo) try{ await cargarAreas(); }catch(e){}
     a=armar(); bar(30);
 
-    /* alojada: publicar es generar los archivos de datos para subirlos al repositorio */
+    /* alojada: si hay conexión con GitHub se sube sola; si no, se descargan los archivos */
     if(!ST.art){
-      var base={meta:a.nd.meta, mats:a.nd.mats, stock:a.nd.stock, cfg:a.nd.cfg};
-      base.meta.movRows=a.nd.mov.length;
-      await bajar("base.json", JSON.stringify(base), "application/json");
-      bar(55);
-      await bajar("mov.json", JSON.stringify(a.nd.mov), "application/json");
-      bar(80);
-      await bajar("areas.json", JSON.stringify({ordenes:a.nd.ordenes, areaDoc:a.nd.areaDoc}),
-        "application/json");
+      var archivos=datosComoArchivos(a.nd);
+      var c=ghCfg();
+      if(ghListo(c)){
+        var sha=await ghPublicar(c, archivos,
+          "Corte "+(a.nd.meta.stockDate||"")+" · "+resumen(a),
+          function(p,txt){ bar(p); pmsg(txt,""); });
+        aplicar(a);
+        pmsg("Publicado en "+esc(c.owner)+"/"+esc(c.repo)+" ("+sha.slice(0,7)+") con "+resumen(a)+
+          ". GitHub tarda un minuto en desplegar; después recarga la página.","good");
+        return;
+      }
+      await bajar("base.json", archivos["base.json"], "application/json"); bar(55);
+      await bajar("mov.json", archivos["mov.json"], "application/json"); bar(80);
+      await bajar("areas.json", archivos["areas.json"], "application/json");
       aplicar(a); bar(100);
       pmsg("Listos base.json, mov.json y areas.json con "+resumen(a)+". Súbelos a la carpeta data/ del "+
-        "repositorio, reemplazando los que están. En cuanto GitHub termine de desplegar, todos ven el corte nuevo.","good");
+        "repositorio, reemplazando los que están. Si configuras la publicación automática arriba, "+
+        "este botón los sube solo.","good");
       return;
     }
 
@@ -1382,17 +1657,64 @@ function expMovCSV(){
 }
 
 function modoAlojado(){
-  $("#btnPub").textContent="Generar archivos de datos";
-  $("#btnPub").title="Descarga base.json y mov.json para subirlos a la carpeta data/ del repositorio";
+  $("#ghCard").classList.remove("hide");
+  $("#btnBajar").classList.remove("hide");
+  var c=ghLeer();
+  $("#ghOwner").value=c.owner||""; $("#ghRepo").value=c.repo||"";
+  $("#ghBranch").value=c.branch||"main"; $("#ghToken").value=c.token||"";
+  ghEstado();
   $("#cmoPub").innerHTML=
-    "<li><b>Generar archivos de datos</b> — descarga <code>base.json</code> y <code>mov.json</code> ya "+
-    "procesados. Súbelos a la carpeta <code>data/</code> del repositorio reemplazando los actuales; "+
-    "GitHub despliega solo en un minuto y todos ven el corte nuevo.</li>"+
-    "<li><b>Ver en mi pantalla</b> — aplica los archivos solo para ti, para revisar un corte antes de subirlo.</li>"+
+    "<li><b>Publicar para todos</b> — si configuraste la publicación automática, sube los tres archivos "+
+    "al repositorio en un solo commit y listo. Si no, te los descarga para que los subas a mano.</li>"+
+    "<li><b>Descargar los datos</b> — obtiene los tres JSON sin publicar, por si quieres revisarlos o "+
+    "guardarlos aparte.</li>"+
+    "<li><b>Ver en mi pantalla</b> — aplica los archivos solo para ti, para revisar un corte antes de publicarlo.</li>"+
     "<li><b>Descargar reporte (.html)</b> — se lleva lo que ves en un archivo que abre solo, sin servidor.</li>";
   $("#permNota").textContent="Este reporte está alojado como sitio estático: no hay cuentas ni permisos. "+
-    "La clave abre la ingesta, y quien tenga acceso al repositorio es quien puede subir el corte nuevo.";
+    "La clave abre la ingesta, y quien tenga el token del repositorio es quien puede publicar.";
 }
+function ghEstado(){
+  var c=ghCfg();
+  if(ghListo(c)) ghMsg("Configurado: <b>"+esc(c.owner)+"/"+esc(c.repo)+"</b>, rama <b>"+esc(c.branch)+
+    "</b>. El botón <b>Publicar para todos</b> sube los datos solo.","good");
+  else ghMsg("Sin configurar: el botón de publicar te descargará los archivos para subirlos a mano.");
+}
+$("#ghSave").addEventListener("click",function(){
+  var c=ghCfg();
+  if(!ghListo(c)){ ghMsg("Faltan datos: usuario, repositorio y token son obligatorios.","bad"); return; }
+  if(ghGuardar(c)) ghEstado();
+  else ghMsg("No se pudo guardar en este navegador. Igual funciona mientras no cierres la pestaña.","bad");
+});
+$("#ghClear").addEventListener("click",function(){
+  try{ localStorage.removeItem(GH_KEY); }catch(e){}
+  $("#ghToken").value="";
+  ghMsg("Token borrado de este navegador.","");
+});
+$("#ghTest").addEventListener("click",async function(){
+  var c=ghCfg();
+  if(!ghListo(c)){ ghMsg("Completa usuario, repositorio y token antes de probar.","bad"); return; }
+  this.disabled=true; ghMsg("Probando…","");
+  try{
+    var r=await ghApi(c,"/git/ref/heads/"+encodeURIComponent(c.branch));
+    ghMsg("Conexión correcta con <b>"+esc(c.owner)+"/"+esc(c.repo)+"</b>, rama <b>"+esc(c.branch)+
+      "</b> (commit "+r.object.sha.slice(0,7)+"). El token puede escribir.","good");
+  }catch(e){ ghMsg(esc(e.message||"No se pudo conectar."),"bad"); }
+  this.disabled=false;
+});
+$("#btnBajar").addEventListener("click",async function(){
+  if(!ST.pendS&&!ST.pendM&&!ST.pendO) return;
+  this.disabled=true;
+  try{
+    if(!ST.movListo) await cargarMov();
+    if(!ST.areasListo) try{ await cargarAreas(); }catch(e){}
+    var a=armar(), f=datosComoArchivos(a.nd);
+    await bajar("base.json", f["base.json"], "application/json");
+    await bajar("mov.json", f["mov.json"], "application/json");
+    await bajar("areas.json", f["areas.json"], "application/json");
+    pmsg("Descargados los tres archivos con "+resumen(a)+". No se publicó nada todavía.","good");
+  }catch(e){ pmsg("No se pudieron generar los archivos: "+((e&&e.message)||"error"),"bad"); }
+  this.disabled=false; pubReady();
+});
 
 if(EMBEBIDO){
   paint();
@@ -1401,7 +1723,7 @@ if(EMBEBIDO){
   fetch("data/base.json",{cache:"no-store"})
     .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
     .then(function(j){
-      D.meta=j.meta||{}; D.mats=j.mats||{}; D.stock=j.stock||[]; D.mov=[];
+      D.meta=j.meta||{}; D.mats=j.mats||{}; D.stock=j.stock||[]; D.mov=[]; D.hist=j.hist||{};
       if(j.cfg){ D.cfg.puestos=j.cfg.puestos||D.cfg.puestos;
                  D.cfg.cabeceras=j.cfg.cabeceras||D.cfg.cabeceras;
                  D.cfg.claves=j.cfg.claves||D.cfg.claves; }

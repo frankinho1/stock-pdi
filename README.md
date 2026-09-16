@@ -27,11 +27,38 @@ Por eso el reporte abre rápido por más que crezca el historial.
 1. Abrir el reporte y pulsar **Modo editor** (clave `PAPERU2026`).
 2. En la ventana **Ingesta**, cargar los Excel de SAP: stock, movimientos y el export de
    órdenes IW39.
-3. Pulsar **Generar archivos de datos**: se descargan `base.json`, `mov.json` y `areas.json`.
-4. Subirlos a la carpeta `data/` del repositorio, reemplazando los actuales.
+3. Pulsar **Publicar para todos**.
 
-GitHub redespliega solo. Si el navegador muestra el corte viejo, un refresco forzado
-(Ctrl+F5) lo resuelve.
+Con la publicación automática configurada (ver abajo), ese botón sube los tres archivos al
+repositorio en un único commit y no hay nada más que hacer. Sin configurar, el mismo botón
+descarga `base.json`, `mov.json` y `areas.json` para subirlos a mano a la carpeta `data/`.
+
+GitHub redespliega solo en un minuto. Si el navegador muestra el corte viejo, un refresco
+forzado (Ctrl+F5) lo resuelve.
+
+## Publicación automática (opcional, recomendada)
+
+Deja el ciclo en un solo clic. La página commitea a este repositorio usando un token
+personal que se pega una vez en la ventana de Ingesta.
+
+1. En GitHub: perfil → **Settings** → **Developer settings** (al final del menú).
+2. **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+3. *Repository access*: **Only select repositories** → solo este repositorio.
+4. *Permissions → Repository permissions*: **Contents** = **Read and write**. Nada más.
+5. Copiar el token y pegarlo en la tarjeta **Publicación automática** de la ingesta, junto
+   con usuario, repositorio y rama. **Probar conexión** verifica que funcione antes de usarlo.
+
+Sobre el token, para decidir con criterio:
+
+- Se guarda **solo en el navegador de quien lo pega** (localStorage). No está en el código,
+  no viaja al repositorio, no lo ve nadie que abra el sitio.
+- Alcance mínimo: escribir archivos en este repositorio y nada más. Si se filtrara, el daño
+  posible se limita a este sitio estático.
+- Tiene fecha de expiración: al vencer hay que generar uno nuevo y volver a pegarlo.
+- Cualquiera que use ese navegador puede publicar. En una computadora compartida conviene
+  usar **Borrar token** al terminar.
+- Los tres archivos van en **un solo commit**, así el sitio nunca queda con unos datos
+  nuevos y otros viejos.
 
 ## La columna Área
 
@@ -93,6 +120,8 @@ Si falta alguna, la ingesta dice cuál y no genera nada.
 - **Un sitio en GitHub Pages es público.** Cualquiera con la URL ve los valores de stock,
   sin contraseña. GitHub Pages no admite control de acceso salvo en planes Enterprise, y la
   clave del modo editor solo oculta la ventana de ingesta: no protege los datos.
+- La clave del modo editor tampoco autoriza a publicar: sin token, el botón solo descarga
+  archivos. Quien tiene el token es quien publica.
 - La carga de archivos por la web de GitHub admite hasta **25 MB por archivo**. A unos
   120 bytes por movimiento, eso alcanza para cerca de 200 mil filas de historial. Pasado ese
   punto hay que subir con `git` desde la computadora.
