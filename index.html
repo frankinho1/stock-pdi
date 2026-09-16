@@ -126,6 +126,18 @@ section.panel.on{display:block}
 .ch-head{display:flex; align-items:flex-end; gap:12px; justify-content:space-between; flex-wrap:wrap;}
 .ch-head h3{font-size:18px; line-height:1.15;}
 .ch-head select{max-width:230px}
+.ch-chips{display:flex; flex-wrap:wrap; gap:6px}
+.ch-chip{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px;
+  font-family:var(--body); color:var(--ink-2); background:var(--surface); padding:4px 10px 4px 7px;
+  border:1px solid var(--line-2); border-radius:14px; line-height:1.3;}
+.ch-chip:hover{background:var(--surface-2)}
+.ch-chip i{width:9px; height:9px; border-radius:50%; background:var(--line-2); flex:0 0 auto}
+.ch-chip[aria-pressed="true"]{color:var(--ink); font-weight:600; border-color:var(--ink-3);
+  background:var(--surface-2);}
+.ch-rango{display:flex; gap:9px; align-items:center; flex-wrap:wrap}
+.ch-rango .lbl{font-size:12px}
+.ch-rango input{padding:5px 8px; font-size:12.5px}
+.ch-rango .btn{padding:5px 11px; font-size:13px}
 .ch-wrap{position:relative}
 .ch-wrap svg{display:block; overflow:visible}
 .ch-tip{position:absolute; pointer-events:none; z-index:5; background:var(--ink); color:var(--bg);
@@ -301,7 +313,16 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
             <p class="eyebrow">Evolutivo</p>
             <h3 id="evolTit">Stock por día</h3>
           </div>
-          <select id="evolSel" aria-label="Filtrar el evolutivo por área o almacén"></select>
+          <span class="seg" id="evolModo">
+            <button type="button" data-m="area" class="on">Por área</button>
+            <button type="button" data-m="alm">Por almacén</button>
+          </span>
+        </div>
+        <div class="ch-chips" id="evolChips" role="group" aria-label="Series del evolutivo"></div>
+        <div class="ch-rango">
+          <label class="lbl">Desde <input type="date" id="evolD1"></label>
+          <label class="lbl">Hasta <input type="date" id="evolD2"></label>
+          <button class="btn" id="evolTodo" type="button">Todo</button>
         </div>
         <div class="ch-wrap" id="evolWrap"></div>
       </div>
@@ -565,6 +586,7 @@ var CFG_DEF={
   claves:["ULE","COLGAJO","PODA","MENSULA","CRUCETA"]
 };
 D.hist=D.hist||{};             // fecha -> totales por almacén (el evolutivo)
+D.histT=D.histT||{};            // fecha -> hora del corte que quedó ese día
 D.ordenes=D.ordenes||{};        // orden -> área
 D.areaDoc=D.areaDoc||{};        // documento -> área ya resuelta (el histórico)
 D.cfg=D.cfg||{};
@@ -600,7 +622,8 @@ D.mov.forEach(function(r){ if(r.length<15) r[M_ARE]=r[M_ARE]||""; });
 
 var ST={art:null,dl:null,admin:false,metric:"val",esp:false,
         repSort:{k:"__tot",d:-1},matSort:{k:0,d:1},movPage:0,pendS:null,pendM:null,pendO:null,
-        movListo:EMBEBIDO, movCargando:null, areasListo:EMBEBIDO, areasCargando:null};
+        movListo:EMBEBIDO, movCargando:null, areasListo:EMBEBIDO, areasCargando:null,
+        evolModo:"area", evolSel:[""]};
 
 function $(s){return document.querySelector(s);}
 function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s));}
@@ -759,6 +782,20 @@ function totalesPorAlmacen(stock){
   Object.keys(t).forEach(function(k){ t[k]=Math.round(t[k]*100)/100; });
   return t;
 }
+/* Paleta categórica validada (orden documentado del método: pasa los umbrales de
+   daltonismo y de visión normal en claro y en oscuro; probé un orden que posterga el
+   naranja y falla, así que se respeta este). El color sigue a la entidad, no al orden
+   en que se marque: quitar una serie no repinta las demás.                        */
+var SERIE_LUZ=["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300","#4a3aa7","#e34948"];
+var SERIE_OSC=["#3987e5","#d95926","#199e70","#c98500","#d55181","#008300","#9085e9","#e66767"];
+function oscuro(){
+  var t=document.documentElement.getAttribute("data-theme");
+  if(t==="dark") return true;
+  if(t==="light") return false;
+  return !!(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+function colorSerie(i){ var p=oscuro()?SERIE_OSC:SERIE_LUZ; return p[i%p.length]; }
+
 function evolOpciones(){
   var alm={}, ar={};
   D.stock.forEach(function(r){ alm[r[S_ALM]]=1; ar[area(r[S_ALM])]=1; });
@@ -767,51 +804,73 @@ function evolOpciones(){
   });
   return {alm:Object.keys(alm).sort(), areas:Object.keys(ar).sort()};
 }
-function serieEvol(sel){
-  var dias=Object.keys(D.hist||{}).sort(), out=[];
-  dias.forEach(function(f){
-    var dia=D.hist[f], v=0;
-    Object.keys(dia).forEach(function(a){
-      if(!sel) v+=dia[a];
-      else if(sel.charAt(0)==="W"){ if(a===sel.slice(2)) v+=dia[a]; }
-      else if(area(a)===sel.slice(2)) v+=dia[a];
-    });
-    out.push({f:f, v:Math.round(v*100)/100});
+/* entidades del modo activo, en orden fijo: la posición define el color */
+function evolEntidades(){
+  var o=evolOpciones();
+  var base=(ST.evolModo==="alm") ? o.alm.map(function(a){return {id:"W:"+a, txt:a, sub:area(a)};})
+                                 : o.areas.map(function(a){return {id:"A:"+a, txt:a, sub:""};});
+  return [{id:"", txt:"Total general", sub:""}].concat(base);
+}
+function valorDia(dia, id){
+  var v=0, hay=false;
+  Object.keys(dia).forEach(function(a){
+    var ok = !id ? true : (id.charAt(0)==="W" ? a===id.slice(2) : area(a)===id.slice(2));
+    if(ok){ v+=dia[a]; hay=true; }
   });
-  return out;
+  return hay?Math.round(v*100)/100:null;
 }
-function nombreSel(sel){
-  if(!sel) return "Total general";
-  return sel.charAt(0)==="W" ? sel.slice(2)+" · "+area(sel.slice(2)) : sel.slice(2);
+function diasEvol(){
+  var d1=$("#evolD1").value, d2=$("#evolD2").value;
+  return Object.keys(D.hist||{}).sort().filter(function(f){
+    if(d1&&f<d1) return false;
+    if(d2&&f>d2) return false;
+    return true;
+  });
 }
-function llenarEvolSel(){
-  var o=evolOpciones(), s=$("#evolSel"), prev=s.value;
-  var h='<option value="">Total general</option>';
-  if(o.areas.length) h+='<optgroup label="Por área">'+o.areas.map(function(a){
-    return '<option value="A:'+esc(a)+'">'+esc(a)+'</option>';}).join("")+'</optgroup>';
-  if(o.alm.length) h+='<optgroup label="Por almacén">'+o.alm.map(function(a){
-    return '<option value="W:'+esc(a)+'">'+esc(a)+' · '+esc(area(a))+'</option>';}).join("")+'</optgroup>';
-  s.innerHTML=h;
-  if(prev) s.value=prev;
-}
+/* el eje no arranca en cero: con valores de millones que se mueven en cientos de miles,
+   cero dejaría una línea plana. Se deja un margen arriba y abajo del recorrido real. */
 function ejeY(min,max){
   var span=max-min;
-  if(span<=0){ var p=Math.abs(max)*0.05||1; return {lo:max-p, hi:max+p}; }
-  return {lo:min-span*0.18, hi:max+span*0.18};
+  if(span<=0){ var p=Math.abs(max)*0.05||1; return {lo:Math.max(0,max-p), hi:max+p}; }
+  var lo=min-span*0.18;
+  if(min>=0&&lo<0) lo=0;          /* el stock no es negativo: nunca un eje bajo cero */
+  return {lo:lo, hi:max+span*0.18};
+}
+function llenarEvolChips(){
+  var ents=evolEntidades(), c=$("#evolChips"), h="";
+  ents.forEach(function(e,i){
+    var on=ST.evolSel.indexOf(e.id)>=0;
+    h+='<button type="button" class="ch-chip" data-id="'+esc(e.id)+'" aria-pressed="'+on+'" '+
+       'title="'+esc(e.sub||e.txt)+'"><i style="background:'+(on?colorSerie(i):"var(--line-2)")+'"></i>'+
+       esc(e.txt)+'</button>';
+  });
+  c.innerHTML=h;
 }
 function renderEvol(){
-  var sel=$("#evolSel").value, datos=serieEvol(sel), w=$("#evolWrap");
-  $("#evolTit").textContent="Stock por día · "+nombreSel(sel);
-  if(datos.length<2){
-    w.innerHTML='<div class="ch-empty">El evolutivo necesita al menos dos cortes publicados.'+
-      (datos.length?' Por ahora hay uno: '+fdate(datos[0].f)+'.':'')+'</div>';
+  var ents=evolEntidades(), dias=diasEvol(), w=$("#evolWrap");
+  var sel=ents.filter(function(e){ return ST.evolSel.indexOf(e.id)>=0; });
+  if(!sel.length){ ST.evolSel=[""]; sel=[ents[0]]; llenarEvolChips(); }
+  $("#evolTit").textContent = sel.length===1 ? "Stock por día · "+sel[0].txt
+    : "Stock por día · "+sel.length+" series";
+
+  if(dias.length<2){
+    w.innerHTML='<div class="ch-empty">El evolutivo necesita al menos dos cortes en el rango elegido.'+
+      (dias.length?' Por ahora hay uno: '+fdate(dias[0])+'.':'')+'</div>';
     return;
   }
+  var series=sel.map(function(e){
+    var i=ents.findIndex(function(x){return x.id===e.id;});
+    return {id:e.id, txt:e.txt, color:colorSerie(i),
+            pts:dias.map(function(f){ return {f:f, v:valorDia(D.hist[f], e.id)}; })
+                    .filter(function(p){ return p.v!==null; })};
+  }).filter(function(s){ return s.pts.length>1; });
+  if(!series.length){ w.innerHTML='<div class="ch-empty">Las series elegidas no tienen datos en este rango.</div>'; return; }
+
   var W=Math.round(Math.max(290, Math.min(780, w.clientWidth||520))), H=232, L=68, R=14, T=18, B=30;
-  var xs=datos.map(function(d){ return new Date(d.f+"T00:00:00").getTime(); });
-  var x0=xs[0], x1=xs[xs.length-1]; if(x1===x0) x1=x0+1;
-  var vs=datos.map(function(d){ return d.v; });
-  var e=ejeY(Math.min.apply(null,vs), Math.max.apply(null,vs));
+  var xs=dias.map(function(f){ return new Date(f+"T00:00:00").getTime(); });
+  var x0=Math.min.apply(null,xs), x1=Math.max.apply(null,xs); if(x1===x0) x1=x0+1;
+  var todos=[]; series.forEach(function(s){ s.pts.forEach(function(p){ todos.push(p.v); }); });
+  var e=ejeY(Math.min.apply(null,todos), Math.max.apply(null,todos));
   var px=function(t){ return L+(t-x0)/(x1-x0)*(W-L-R); };
   var py=function(v){ return T+(e.hi-v)/(e.hi-e.lo)*(H-T-B); };
 
@@ -823,48 +882,59 @@ function renderEvol(){
        '<text x="'+(L-9)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" '+
        'fill="var(--ink-3)" font-family="var(--mono)">'+comp(v).replace("S/ ","")+'</text>';
   }
-  var pts=datos.map(function(d,i){ return {x:px(xs[i]), y:py(d.v), d:d}; });
-  var linea=pts.map(function(p,i){ return (i?"L":"M")+p.x.toFixed(1)+" "+p.y.toFixed(1); }).join(" ");
-
-  var etx="";
-  [0, datos.length-1].forEach(function(i){
-    if(i===0&&datos.length<3) return;
-    etx+='<text x="'+pts[i].x.toFixed(1)+'" y="'+(H-B+18)+'" text-anchor="middle" '+
-      'font-size="11" fill="var(--ink-3)" font-family="var(--mono)">'+fdate(datos[i].f)+'</text>';
+  var cuerpo="";
+  series.forEach(function(s){
+    s.xy=s.pts.map(function(p){ return {x:px(new Date(p.f+"T00:00:00").getTime()), y:py(p.v), p:p}; });
+    cuerpo+='<path d="'+s.xy.map(function(q,i){return (i?"L":"M")+q.x.toFixed(1)+" "+q.y.toFixed(1);}).join(" ")+
+      '" fill="none" stroke="'+s.color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    s.xy.forEach(function(q){
+      cuerpo+='<circle cx="'+q.x.toFixed(1)+'" cy="'+q.y.toFixed(1)+'" r="3.5" fill="'+s.color+
+        '" stroke="var(--surface)" stroke-width="2"/>';
+    });
   });
-  var ult=pts[pts.length-1];
-  var marcas=pts.map(function(p){
-    return '<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="3.5" fill="var(--brand)" '+
-           'stroke="var(--surface)" stroke-width="2"/>';}).join("");
+  /* etiqueta directa del último valor solo cuando hay pocas series; con más, manda el hover */
+  var etv="";
+  if(series.length<=3) series.forEach(function(s){
+    var u=s.xy[s.xy.length-1];
+    etv+='<text x="'+(u.x-6).toFixed(1)+'" y="'+(u.y-12).toFixed(1)+'" text-anchor="end" font-size="12" '+
+      'font-weight="700" fill="var(--ink)" font-family="var(--mono)" paint-order="stroke" '+
+      'stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round">'+comp(u.p.v)+'</text>';
+  });
+  var etx="";
+  [0, dias.length-1].forEach(function(i){
+    if(i===0&&dias.length<3) return;
+    etx+='<text x="'+px(xs[i]).toFixed(1)+'" y="'+(H-B+18)+'" text-anchor="middle" font-size="11" '+
+      'fill="var(--ink-3)" font-family="var(--mono)">'+fdate(dias[i])+'</text>';
+  });
 
-  w.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Evolutivo de stock por día para '+
-    esc(nombreSel(sel))+'">'+g+
-    '<path d="'+linea+'" fill="none" stroke="var(--brand)" stroke-width="2" '+
-    'stroke-linejoin="round" stroke-linecap="round"/>'+
+  w.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" '+
+    'aria-label="Evolutivo de stock por día">'+g+
     '<line id="evolCross" x1="0" y1="'+T+'" x2="0" y2="'+(H-B)+'" stroke="var(--line-2)" '+
-    'stroke-width="1" stroke-dasharray="3 3" opacity="0"/>'+
-    marcas+
-    '<text x="'+(ult.x-6).toFixed(1)+'" y="'+(ult.y-12).toFixed(1)+'" text-anchor="end" font-size="12" '+
-    'font-weight="700" fill="var(--ink)" font-family="var(--mono)" paint-order="stroke" '+
-    'stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round">'+comp(ult.d.v)+'</text>'+
-    etx+
-    '<rect id="evolHit" x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-B)+'" fill="transparent"/>'+
+    'stroke-width="1" stroke-dasharray="3 3" opacity="0"/>'+cuerpo+etv+etx+
+    '<rect x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-B)+'" fill="transparent"/>'+
     '</svg><div class="ch-tip" id="evolTip"></div>'+
-    '<div class="ch-foot">'+datos.length+' cortes · del '+fdate(datos[0].f)+' al '+
-    fdate(datos[datos.length-1].f)+'</div>';
+    '<div class="ch-foot">'+dias.length+' cortes · del '+fdate(dias[0])+' al '+fdate(dias[dias.length-1])+
+    (D.histT&&D.histT[dias[dias.length-1]]?' · última actualización '+esc(D.histT[dias[dias.length-1]]):'')+
+    '</div>';
 
   var svg=w.querySelector("svg"), tip=$("#evolTip"), cross=w.querySelector("#evolCross");
-  function mover(ev){
-    var r=svg.getBoundingClientRect(), esc2=W/r.width;
-    var mx=(ev.clientX-r.left)*esc2, mejor=0, dmin=1e9;
-    pts.forEach(function(p,i){ var d=Math.abs(p.x-mx); if(d<dmin){dmin=d; mejor=i;} });
-    var p=pts[mejor];
-    cross.setAttribute("x1",p.x); cross.setAttribute("x2",p.x); cross.setAttribute("opacity","1");
-    tip.innerHTML=fdate(p.d.f)+" · <b>"+money(p.d.v)+"</b>";
-    tip.style.left=(p.x/esc2)+"px"; tip.style.top=(p.y/esc2-10)+"px";
+  svg.addEventListener("mousemove",function(ev){
+    var r=svg.getBoundingClientRect(), mx=(ev.clientX-r.left)*(W/r.width), mejor=0, dmin=1e9;
+    xs.forEach(function(t,i){ var d=Math.abs(px(t)-mx); if(d<dmin){dmin=d; mejor=i;} });
+    var f=dias[mejor], x=px(xs[mejor]);
+    cross.setAttribute("x1",x); cross.setAttribute("x2",x); cross.setAttribute("opacity","1");
+    var h="<b>"+fdate(f)+(D.histT&&D.histT[f]?" "+esc(D.histT[f]):"")+"</b>", alto=py(e.hi);
+    series.forEach(function(s){
+      var q=null; s.xy.forEach(function(z){ if(z.p.f===f) q=z; });
+      if(!q) return;
+      if(q.y<alto||alto===py(e.hi)) alto=Math.min(alto===py(e.hi)?q.y:alto, q.y);
+      h+='<br><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+
+         s.color+'"></span> '+esc(s.txt)+" · "+money(q.p.v);
+    });
+    tip.innerHTML=h;
+    tip.style.left=(x/(W/r.width))+"px"; tip.style.top=(Math.max(alto,T+10)/(W/r.width)-10)+"px";
     tip.classList.add("on");
-  }
-  svg.addEventListener("mousemove",mover);
+  });
   svg.addEventListener("mouseleave",function(){ tip.classList.remove("on"); cross.setAttribute("opacity","0"); });
 }
 
@@ -927,7 +997,28 @@ $("#segMetric").addEventListener("click",function(e){
   $$("#segMetric button").forEach(function(x){x.classList.toggle("on",x===b);});
   renderRep();
 });
-$("#evolSel").addEventListener("change",renderEvol);
+$("#evolChips").addEventListener("click",function(ev){
+  var b=ev.target.closest(".ch-chip"); if(!b)return;
+  var id=b.dataset.id, i=ST.evolSel.indexOf(id);
+  if(i>=0){ if(ST.evolSel.length>1) ST.evolSel.splice(i,1); }
+  else { if(ST.evolSel.length>=7){ toast("Máximo 7 series a la vez, para que se sigan distinguiendo."); return; }
+         ST.evolSel.push(id); }
+  llenarEvolChips(); renderEvol();
+});
+$("#evolModo").addEventListener("click",function(ev){
+  var b=ev.target.closest("button"); if(!b)return;
+  ST.evolModo=b.dataset.m;
+  $$("#evolModo button").forEach(function(x){ x.classList.toggle("on",x===b); });
+  ST.evolSel=[""];
+  llenarEvolChips(); renderEvol();
+});
+$("#evolD1").addEventListener("change",renderEvol);
+$("#evolD2").addEventListener("change",renderEvol);
+$("#evolTodo").addEventListener("click",function(){
+  var dd=Object.keys(D.hist||{}).sort();
+  if(dd.length){ $("#evolD1").value=dd[0]; $("#evolD2").value=dd[dd.length-1]; }
+  renderEvol();
+});
 var evolT=null;
 window.addEventListener("resize",function(){ clearTimeout(evolT); evolT=setTimeout(renderEvol,160); });
 $("#thrApply").addEventListener("click",function(){
@@ -1060,7 +1151,7 @@ function renderCur(){
   var m=D.meta;
   $("#curInfo").innerHTML=
     "<dt>Archivo stock</dt><dd>"+esc(m.stockFile||"—")+"</dd>"+
-    "<dt>Fecha de corte</dt><dd>"+esc(m.stockDate||"—")+"</dd>"+
+    "<dt>Fecha de corte</dt><dd>"+esc(m.stockDate||"—")+(m.stockTime?" · "+esc(m.stockTime)+" h":"")+"</dd>"+
     "<dt>Posiciones</dt><dd>"+D.stock.length.toLocaleString("en-US")+"</dd>"+
     "<dt>Archivo movimientos</dt><dd>"+esc(m.movFile||"—")+"</dd>"+
     "<dt>Periodo</dt><dd>"+esc(m.movFrom||"—")+" a "+esc(m.movTo||"—")+"</dd>"+
@@ -1073,7 +1164,7 @@ function renderCur(){
 function paint(){
   var tot=0, mset={}; D.stock.forEach(function(r){tot+=r[S_VAL]; mset[r[S_MAT]]=1;});
   var alm=almList();
-  $("#cCorte").textContent=fdate(D.meta.stockDate);
+  $("#cCorte").textContent=fdate(D.meta.stockDate)+(D.meta.stockTime?" "+D.meta.stockTime:"");
   $("#cValor").textContent=comp(tot);
   $("#sVal").textContent=money(tot);
   $("#sMat").textContent=Object.keys(mset).length;
@@ -1094,7 +1185,9 @@ function paint(){
   fillMovFilters();
   if(D.meta.movFrom&&!$("#fDesde").value) $("#fDesde").value=D.meta.movFrom;
   if(D.meta.movTo&&!$("#fHasta").value) $("#fHasta").value=D.meta.movTo;
-  pintarCfg(); pintarAreaInfo(); llenarEvolSel();
+  pintarCfg(); pintarAreaInfo(); llenarEvolChips();
+  if(!$("#evolD1").value){ var dd=Object.keys(D.hist||{}).sort();
+    if(dd.length){ $("#evolD1").value=dd[0]; $("#evolD2").value=dd[dd.length-1]; } }
   renderArea(); renderEvol(); renderRep(); renderMat(); renderMov(); renderCur();
 }
 
@@ -1124,6 +1217,8 @@ function dv(v){
   m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m?m[0]:s;
 }
 function corteFromName(n){var m=String(n).match(/(20\d{2})(\d{2})(\d{2})/); return m?m[1]+"-"+m[2]+"-"+m[3]:"";}
+/* los export de SAP traen la hora en el nombre: STOCK_EXPORT_AAAAMMDD_HHMMSS */
+function horaFromName(n){var m=String(n).match(/20\d{6}[_-](\d{2})(\d{2})/); return m?m[1]+":"+m[2]:"";}
 
 /* materiales de servicio: se descartan en toda ingesta */
 function isServicio(m){ return /^s/i.test(m); }
@@ -1282,6 +1377,7 @@ $("#fileS").addEventListener("change",async function(){
   state("#stS","Leyendo archivo…");
   try{ var d=await readStock(f); ST.pendS=d;
     $("#inCorte").value=corteFromName(f.name)||$("#inCorte").value;
+    ST.pendHora=horaFromName(f.name);
     state("#stS","<b>"+esc(f.name)+"</b> · hoja «"+esc(d.sheet)+"»<br>"+
       d.rows.length.toLocaleString("en-US")+" posiciones · total S/ "+moneyC(d.total)+
       (d.skip?"<br>"+d.skip.toLocaleString("en-US")+" filas de servicio (material S…) descartadas":"")+
@@ -1428,6 +1524,7 @@ function armar(){
     nd.stock=ST.pendS.rows;
     nd.meta.stockFile=ST.pendS.name;
     nd.meta.stockDate=$("#inCorte").value||corteFromName(ST.pendS.name)||nd.meta.stockDate||"";
+    nd.meta.stockTime=horaFromName(ST.pendS.name)||ST.pendHora||"";
   }
   if(ST.pendM){
     var mg = $("#chkReset").checked
@@ -1441,7 +1538,11 @@ function armar(){
   /* foto del día para el evolutivo: la clave es la fecha de corte, así que publicar
      dos veces el mismo día deja la última, no dos puntos */
   nd.hist=Object.assign({},D.hist);
-  if(nd.meta.stockDate) nd.hist[nd.meta.stockDate]=totalesPorAlmacen(nd.stock);
+  nd.histT=Object.assign({},D.histT);
+  if(nd.meta.stockDate){
+    nd.hist[nd.meta.stockDate]=totalesPorAlmacen(nd.stock);
+    if(nd.meta.stockTime) nd.histT[nd.meta.stockDate]=nd.meta.stockTime;
+  }
 
   /* con las órdenes y el histórico al día, se recalcula el área de TODO el historial:
      un IW39 nuevo puede resolver movimientos viejos que antes quedaron sin área */
@@ -1467,7 +1568,7 @@ function resumen(a){
   return p.join(" · ");
 }
 function datosComoArchivos(nd){
-  var base={meta:nd.meta, mats:nd.mats, stock:nd.stock, cfg:nd.cfg, hist:nd.hist};
+  var base={meta:nd.meta, mats:nd.mats, stock:nd.stock, cfg:nd.cfg, hist:nd.hist, histT:nd.histT};
   base.meta.movRows=nd.mov.length;
   return { "base.json":JSON.stringify(base),
            "mov.json":JSON.stringify(nd.mov),
@@ -1723,7 +1824,7 @@ if(EMBEBIDO){
   fetch("data/base.json",{cache:"no-store"})
     .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
     .then(function(j){
-      D.meta=j.meta||{}; D.mats=j.mats||{}; D.stock=j.stock||[]; D.mov=[]; D.hist=j.hist||{};
+      D.meta=j.meta||{}; D.mats=j.mats||{}; D.stock=j.stock||[]; D.mov=[]; D.hist=j.hist||{}; D.histT=j.histT||{};
       if(j.cfg){ D.cfg.puestos=j.cfg.puestos||D.cfg.puestos;
                  D.cfg.cabeceras=j.cfg.cabeceras||D.cfg.cabeceras;
                  D.cfg.claves=j.cfg.claves||D.cfg.claves; }
