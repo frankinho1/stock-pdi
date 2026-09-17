@@ -290,14 +290,13 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
   <div class="stats">
     <div class="stat"><div class="k">Valor libre utilizable</div><div class="v money" id="sVal">—</div><div class="d">total general · PEN</div></div>
     <div class="stat"><div class="k">Materiales</div><div class="v" id="sMat">—</div><div class="d">códigos distintos</div></div>
-    <div class="stat"><div class="k">Almacenes</div><div class="v" id="sAlm">—</div><div class="d">centro L003</div></div>
     <div class="stat"><div class="k">Posiciones</div><div class="v" id="sPos">—</div><div class="d">filas material · almacén</div></div>
     <div class="stat"><div class="k">Movimientos</div><div class="v" id="sMov">—</div><div class="d" id="sMovD">historial acumulado</div></div>
   </div>
 
   <div class="focus">
     <div class="focus-head">
-      <p class="eyebrow">El dato del día · formato correo</p>
+      <p class="eyebrow">El dato del día</p>
       <h2>Resumen de valor de stock por área</h2>
       <p>Se resaltan los niveles elevados de stock virtual en los almacenes para el seguimiento respectivo.</p>
     </div>
@@ -353,7 +352,6 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
         <button class="on" data-m="val" type="button">Valor S/</button>
         <button data-m="qty" type="button">Cantidad</button>
       </span></label>
-    <label class="chk"><input type="checkbox" id="chkEsp"> Incluir stock especial (Q)</label>
   </div>
   <div class="tablebox"><table class="grid" id="gRep"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
   <div class="tfoot-note"><span id="repCount">—</span><span>Clic en un encabezado para ordenar.</span></div>
@@ -990,7 +988,6 @@ $("#gRep").querySelector("thead").addEventListener("click",function(e){
   renderRep();
 });
 $("#qRep").addEventListener("input",renderRep);
-$("#chkEsp").addEventListener("change",function(){ST.esp=this.checked; renderRep();});
 $("#segMetric").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b)return;
   ST.metric=b.dataset.m;
@@ -1168,7 +1165,6 @@ function paint(){
   $("#cValor").textContent=comp(tot);
   $("#sVal").textContent=money(tot);
   $("#sMat").textContent=Object.keys(mset).length;
-  $("#sAlm").textContent=alm.length;
   $("#sPos").textContent=D.stock.length.toLocaleString("en-US");
   $("#sMov").textContent=(D.mov.length||D.meta.movRows||0).toLocaleString("en-US");
   $("#sMovD").textContent=D.meta.movFrom?fdate(D.meta.movFrom)+" – "+fdate(D.meta.movTo):"sin datos";
