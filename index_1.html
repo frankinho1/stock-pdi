@@ -1,0 +1,1848 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Stock PDI PA Perú</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style id="CSS">
+:root{
+  color-scheme:light dark;
+  --bg:#F4F6F9; --surface:#FFFFFF; --surface-2:#E9EEF4; --surface-3:#DDE4ED;
+  --ink:#121A24; --ink-2:#4A5967; --ink-3:#77848F;
+  --line:#D6DEE7; --line-2:#B5C1CE;
+  --brand:#173D6B; --brand-2:#102B4C; --brand-soft:#E4ECF5; --topbar:#173D6B;
+  --accent:#DCE2E9; --accent-line:#B3BFCC; --accent-ink:#1B2836;
+  --warn-bg:#FBF08F; --warn-line:#CDB63C; --warn-ink:#4A3D05;
+  --pos:#2C6E4A; --neg:#A33A2A;
+  --shadow:0 1px 2px rgba(16,40,72,.07), 0 6px 18px rgba(16,40,72,.06);
+  --r:6px;
+  --mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --cond:'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --body:'Source Sans 3', system-ui, -apple-system, Segoe UI, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1118; --surface:#131B25; --surface-2:#1A232F; --surface-3:#222D3A;
+    --ink:#E5EBF2; --ink-2:#9DABBA; --ink-3:#72808E;
+    --line:#242E3A; --line-2:#35414F;
+    --brand:#6BA9DD; --brand-2:#97C6EA; --brand-soft:#122438; --topbar:#0A1B2E;
+    --accent:#37424F; --accent-line:#586475; --accent-ink:#E9EEF4;
+    --warn-bg:#4C4110; --warn-line:#8E7B27; --warn-ink:#F6EBAA;
+    --pos:#5FBE86; --neg:#E0765F;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.28);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1118; --surface:#131B25; --surface-2:#1A232F; --surface-3:#222D3A;
+  --ink:#E5EBF2; --ink-2:#9DABBA; --ink-3:#72808E;
+  --line:#242E3A; --line-2:#35414F;
+  --brand:#6BA9DD; --brand-2:#97C6EA; --brand-soft:#122438; --topbar:#0A1B2E;
+  --accent:#37424F; --accent-line:#586475; --accent-ink:#E9EEF4;
+  --warn-bg:#4C4110; --warn-line:#8E7B27; --warn-ink:#F6EBAA;
+  --pos:#5FBE86; --neg:#E0765F;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.28);
+}
+*{box-sizing:border-box}
+html,body{margin:0; padding:0}
+img{max-width:100%}
+[hidden]{display:none !important}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:14px; line-height:1.5;
+     -webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:var(--cond); font-weight:700; margin:0; text-wrap:balance; letter-spacing:.01em;}
+.wrap{max-width:1360px; margin:0 auto; padding:0 22px;}
+
+header.top{background:var(--topbar); color:#EAF1F8; border-bottom:3px solid var(--accent-line);}
+.topin{display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding:14px 0 13px;}
+.brand{display:flex; align-items:baseline; gap:10px;}
+.brand h1{font-size:26px; line-height:1; color:#fff; letter-spacing:.005em;}
+.brand .sub{font-family:var(--cond); font-size:14px; letter-spacing:.14em; text-transform:uppercase; color:#9FC0DC;}
+.topmeta{margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.chip{font-family:var(--cond); font-size:13px; letter-spacing:.1em; text-transform:uppercase;
+      padding:5px 10px; border:1px solid rgba(255,255,255,.28); border-radius:3px; color:#CFE0EF; white-space:nowrap;}
+.chip b{color:#fff; font-weight:600; letter-spacing:.04em;}
+.viewbtn{font-family:var(--cond); font-size:14px; letter-spacing:.1em; text-transform:uppercase; cursor:pointer;
+  background:rgba(255,255,255,.1); color:#fff; border:1px solid rgba(255,255,255,.35); border-radius:3px; padding:6px 13px;}
+.viewbtn:hover{background:rgba(255,255,255,.2)}
+.viewbtn.on{background:var(--accent); border-color:var(--accent-line); color:var(--accent-ink);}
+.gate{display:flex; gap:6px; align-items:center;}
+.gate input{width:150px; font-family:var(--body); font-size:13px; padding:6px 9px; border-radius:3px;
+  border:1px solid rgba(255,255,255,.4); background:rgba(0,0,0,.18); color:#fff;}
+.gate input::placeholder{color:#9FC0DC}
+.gate .err{color:#FFD9C9; font-size:12px}
+
+nav.tabs{background:var(--surface); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:20;}
+.tabsin{display:flex; gap:2px; overflow-x:auto; align-items:center;}
+.tabsin .grow{flex:1 1 auto; min-width:8px}
+.navdl{flex:0 0 auto; margin:0 0 3px}
+.tab{font-family:var(--cond); font-size:16px; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap;
+  background:none; border:0; border-bottom:3px solid transparent; color:var(--ink-2); padding:13px 16px 10px; cursor:pointer;}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink); border-bottom-color:var(--accent-line); font-weight:700;}
+.tab .num{font-family:var(--mono); font-size:11px; color:var(--ink-3); margin-right:7px;}
+.tab[aria-selected="true"] .num{color:var(--brand)}
+
+main{padding:26px 0 60px;}
+section.panel{display:none}
+section.panel.on{display:block}
+
+/* --- encabezado de sección: mismo objeto en las tres ventanas --- */
+.sec{display:flex; align-items:flex-end; gap:20px 26px; flex-wrap:wrap;
+  border-bottom:1px solid var(--line); padding-bottom:13px; margin:0 0 16px;}
+.sec-lead{min-width:min(100%,320px); flex:1 1 auto;}
+.sec h2{font-size:27px; line-height:1.05; letter-spacing:.01em; margin:1px 0 0;}
+.sec h2 .rule{display:block; width:46px; height:3px; background:var(--accent-line); margin-top:9px;}
+.sec-sub{font-size:13.5px; color:var(--ink-2); margin:9px 0 0; max-width:62ch;}
+.sec-sub b{color:var(--ink); font-variant-numeric:tabular-nums; font-weight:600;}
+.sec-tools{display:flex; gap:9px; align-items:center; flex-wrap:wrap; flex:0 0 auto;}
+.eyebrow{font-family:var(--cond); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--brand);
+  margin:0 0 2px;}
+
+.stats{display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--line); border-radius:var(--r);
+  background:var(--surface); box-shadow:var(--shadow); margin-bottom:26px; overflow:hidden;}
+.stat{flex:1 1 170px; padding:14px 18px; border-right:1px solid var(--line);}
+.stat:last-child{border-right:0}
+.stat .k{font-family:var(--cond); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);}
+.stat .v{font-family:var(--cond); font-size:25px; font-weight:700; line-height:1.15; font-variant-numeric:tabular-nums;}
+.stat .v.money{color:var(--brand-2)}
+.stat .d{font-size:12px; color:var(--ink-3); font-variant-numeric:tabular-nums;}
+
+/* --- pieza central del reporte: el resumen por área --- */
+.focus{border:1px solid var(--line-2); border-top:4px solid var(--accent-line); border-radius:var(--r);
+  background:var(--surface); box-shadow:0 2px 4px rgba(16,40,72,.08), 0 14px 34px rgba(16,40,72,.09);
+  margin:0 0 34px; overflow:hidden;}
+:root[data-theme="dark"] .focus{box-shadow:0 2px 4px rgba(0,0,0,.45), 0 14px 34px rgba(0,0,0,.35)}
+.focus-head{padding:17px 22px 15px; border-bottom:1px solid var(--line); background:var(--brand-soft);}
+.focus-head .eyebrow{color:var(--brand)}
+.focus-head h2{font-size:25px; line-height:1.1; margin:1px 0 0;}
+.focus-head p{margin:7px 0 0; font-size:13.5px; color:var(--ink-2); max-width:70ch;}
+.focus-body{padding:20px 22px 20px; display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start;}
+.fb-table{flex:0 1 auto; overflow-x:auto; max-width:100%;}
+.fb-chart{flex:1 1 340px; min-width:min(100%,300px); display:flex; flex-direction:column; gap:12px;}
+.ch-head{display:flex; align-items:flex-end; gap:12px; justify-content:space-between; flex-wrap:wrap;}
+.ch-head h3{font-size:18px; line-height:1.15;}
+.ch-head select{max-width:230px}
+.ch-chips{display:flex; flex-wrap:wrap; gap:6px}
+.ch-chip{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px;
+  font-family:var(--body); color:var(--ink-2); background:var(--surface); padding:4px 10px 4px 7px;
+  border:1px solid var(--line-2); border-radius:14px; line-height:1.3;}
+.ch-chip:hover{background:var(--surface-2)}
+.ch-chip i{width:9px; height:9px; border-radius:50%; background:var(--line-2); flex:0 0 auto}
+.ch-chip[aria-pressed="true"]{color:var(--ink); font-weight:600; border-color:var(--ink-3);
+  background:var(--surface-2);}
+.ch-rango{display:flex; gap:9px; align-items:center; flex-wrap:wrap}
+.ch-rango .lbl{font-size:12px}
+.ch-rango input{padding:5px 8px; font-size:12.5px}
+.ch-rango .btn{padding:5px 11px; font-size:13px}
+.ch-wrap{position:relative}
+.ch-wrap svg{display:block; overflow:visible}
+.ch-tip{position:absolute; pointer-events:none; z-index:5; background:var(--ink); color:var(--bg);
+  font-size:12px; line-height:1.4; padding:6px 10px; border-radius:4px; white-space:nowrap;
+  font-variant-numeric:tabular-nums; opacity:0; transition:opacity .12s; transform:translate(-50%,-100%);
+  box-shadow:0 4px 14px rgba(0,0,0,.22);}
+.ch-tip.on{opacity:1}
+.ch-tip b{color:var(--bg); font-weight:700}
+.ch-empty{font-size:13px; color:var(--ink-3); padding:34px 14px; text-align:center;
+  border:1px dashed var(--line-2); border-radius:var(--r);}
+.ch-foot{font-size:12px; color:var(--ink-3); font-variant-numeric:tabular-nums;}
+table.pivot{border-collapse:collapse; font-size:14px;}
+table.pivot th, table.pivot td{border:1px solid var(--line-2); padding:8px 12px; text-align:left; white-space:nowrap;}
+table.pivot thead th{background:var(--surface-3); font-family:var(--cond); font-size:14px; letter-spacing:.04em;
+  font-weight:700; text-align:center;}
+table.pivot td.num{text-align:right; font-variant-numeric:tabular-nums; font-family:var(--mono); font-size:13px;}
+table.pivot td.code{font-family:var(--mono); font-size:13px; font-weight:500;}
+table.pivot tbody td:nth-child(2){font-weight:600}
+table.pivot tr.hot td.num{background:var(--warn-bg); color:var(--warn-ink); font-weight:600;}
+table.pivot tr.hot td.code{box-shadow:inset 3px 0 0 var(--warn-line)}
+table.pivot tr.tot td{background:var(--surface-2); font-weight:700; border-top:2px solid var(--line-2);}
+table.pivot tr.tot td.num{font-family:var(--mono); font-weight:700; font-size:14px;}
+.focus-foot{display:flex; gap:18px 26px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+  padding:13px 22px 15px; border-top:1px solid var(--line); background:var(--surface-2);}
+.legend{font-size:13px; color:var(--ink-2); display:flex; align-items:center; gap:9px;}
+.swatch{width:26px; height:14px; background:var(--warn-bg); border:1px solid var(--warn-line); display:inline-block;}
+.thctl{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-2); flex-wrap:wrap;}
+.thctl input{width:112px}
+
+.controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px;}
+input[type="text"], input[type="number"], input[type="date"], input[type="password"], select{
+  font-family:var(--body); font-size:13.5px; color:var(--ink); background:var(--surface);
+  border:1px solid var(--line-2); border-radius:4px; padding:7px 10px;}
+input:focus-visible, select:focus-visible, button:focus-visible, .tab:focus-visible{
+  outline:2px solid var(--brand); outline-offset:1px;}
+.search{min-width:250px}
+label.lbl{font-family:var(--cond); font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3);
+  display:flex; align-items:center; gap:6px;}
+.seg{display:inline-flex; border:1px solid var(--line-2); border-radius:4px; overflow:hidden;}
+.seg button{font-family:var(--cond); font-size:14px; letter-spacing:.06em; text-transform:uppercase; cursor:pointer;
+  background:var(--surface); color:var(--ink-2); border:0; border-right:1px solid var(--line); padding:7px 13px;}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--brand); color:var(--surface)}
+.btn{font-family:var(--cond); font-size:14px; letter-spacing:.08em; text-transform:uppercase; cursor:pointer;
+  background:var(--surface); color:var(--ink); border:1px solid var(--line-2); border-radius:4px; padding:7px 14px;}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent); border-color:var(--accent-line); color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.chk{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-2)}
+
+.tablebox{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow);
+  overflow:auto; max-height:640px;}
+table.grid{border-collapse:separate; border-spacing:0; width:100%; font-size:13px;}
+table.grid thead th{position:sticky; top:0; z-index:2; background:var(--surface-2); color:var(--ink);
+  font-family:var(--cond); font-size:13.5px; letter-spacing:.05em; font-weight:700; text-align:left;
+  padding:9px 11px; border-bottom:1px solid var(--line-2); white-space:nowrap; cursor:pointer; user-select:none;}
+table.grid thead th.n{text-align:right}
+table.grid thead th .ar{color:var(--brand); font-size:10px; margin-left:4px}
+table.grid tbody td{padding:6px 11px; border-bottom:1px solid var(--line); white-space:nowrap;}
+table.grid tbody tr:hover td{background:var(--surface-2)}
+table.grid td.n{text-align:right; font-family:var(--mono); font-size:12px; font-variant-numeric:tabular-nums;}
+table.grid td.c{font-family:var(--mono); font-size:12px;}
+table.grid td.desc{white-space:normal; min-width:250px; max-width:420px;}
+table.grid td.zero{color:var(--ink-3)}
+table.grid td.neg{color:var(--neg)}
+table.grid tfoot td{position:sticky; bottom:0; background:var(--surface-3); font-weight:700; padding:8px 11px;
+  border-top:1px solid var(--line-2);}
+table.grid tfoot td.n{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums;}
+.badge{font-family:var(--cond); font-size:12px; letter-spacing:.06em; padding:1px 7px; border-radius:3px;
+  border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink-2);}
+.tfoot-note{display:flex; gap:14px; flex-wrap:wrap; align-items:center; font-size:12.5px; color:var(--ink-3);
+  margin-top:9px; font-variant-numeric:tabular-nums;}
+.pager{display:flex; gap:6px; align-items:center; margin-left:auto;}
+.pager button{font-family:var(--mono); font-size:12px; padding:4px 9px; border:1px solid var(--line-2);
+  background:var(--surface); color:var(--ink); border-radius:3px; cursor:pointer;}
+.pager button[disabled]{opacity:.4; cursor:not-allowed}
+
+.ingrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:18px; margin-bottom:20px;}
+.drop{background:var(--surface); border:1.5px dashed var(--line-2); border-radius:var(--r); padding:20px;}
+.drop.over{border-color:var(--accent-line); background:var(--brand-soft)}
+.drop h3{font-size:17px; margin-bottom:2px}
+.drop .hint{font-size:12.5px; color:var(--ink-3); margin:4px 0 14px; font-family:var(--mono);}
+.drop .state{margin-top:12px; font-size:13px; border-top:1px solid var(--line); padding-top:11px;}
+.ok{color:var(--pos)} .bad{color:var(--neg)}
+.reglas{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px;}
+.reglas label{display:flex; flex-direction:column; gap:6px;}
+.reglas label>span{font-family:var(--cond); font-size:13.5px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--ink-2);}
+.reglas textarea{font-family:var(--mono); font-size:12.5px; line-height:1.55; color:var(--ink);
+  background:var(--surface-2); border:1px solid var(--line-2); border-radius:4px; padding:9px 11px; resize:vertical;}
+.reglas em{font-style:normal; font-size:12px; color:var(--ink-3); line-height:1.45}
+.progress{height:6px; background:var(--surface-3); border-radius:3px; overflow:hidden; margin-top:10px}
+.progress i{display:block; height:100%; background:var(--accent-line); width:0%; transition:width .18s}
+.panelcard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--shadow);
+  padding:18px 20px; margin-bottom:18px;}
+.panelcard h3{font-size:16px; margin-bottom:10px}
+dl.kv{display:grid; grid-template-columns:auto 1fr; gap:5px 18px; margin:0; font-size:13.5px}
+dl.kv dt{font-family:var(--cond); letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); font-size:12.5px}
+dl.kv dd{margin:0; font-variant-numeric:tabular-nums}
+.msg{padding:10px 13px; border-radius:4px; font-size:13.5px; margin-top:12px; border:1px solid var(--line-2);
+  background:var(--surface-2);}
+.msg.good{border-color:var(--pos); color:var(--pos)}
+.msg.bad{border-color:var(--neg); color:var(--neg)}
+.steps{margin:0; padding-left:18px; font-size:13.5px; color:var(--ink-2)}
+.steps li{margin-bottom:5px}
+.empty{padding:40px 20px; text-align:center; color:var(--ink-3); font-size:14px}
+.hide{display:none !important}
+#toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:60; max-width:min(92vw,520px);
+  background:var(--ink); color:var(--bg); font-size:13.5px; padding:11px 17px; border-radius:5px;
+  box-shadow:0 8px 28px rgba(0,0,0,.28); opacity:0; pointer-events:none; transition:opacity .16s;}
+#toast.on{opacity:1}
+footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40px; color:var(--ink-3); font-size:12.5px}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}}
+@media (max-width:640px){ .brand h1{font-size:21px} .stat{flex-basis:50%} .wrap{padding:0 14px} }
+</style>
+
+<header class="top">
+  <div class="wrap topin">
+    <div class="brand">
+      <h1>Stock PDI</h1>
+      <span class="sub">PA Perú · Almacenes L003</span>
+    </div>
+    <div class="topmeta">
+      <span class="chip">Corte <b id="cCorte">—</b></span>
+      <span class="chip">Valor libre util. <b id="cValor">—</b></span>
+      <span class="chip" id="cRole">Solo lectura</span>
+      <button class="viewbtn" id="btnAdmin" type="button">Modo editor</button>
+      <span class="gate hide" id="gate">
+        <input type="password" id="pw" placeholder="Clave" autocomplete="off">
+        <button class="viewbtn" id="pwGo" type="button">Entrar</button>
+        <span class="err hide" id="pwErr">Clave incorrecta</span>
+      </span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs"><div class="wrap tabsin" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-p="rep"><span class="num">01</span>Reporte</button>
+  <button class="tab" role="tab" aria-selected="false" data-p="mat"><span class="num">02</span>Base de materiales</button>
+  <button class="tab" role="tab" aria-selected="false" data-p="mov"><span class="num">03</span>Base de movimientos</button>
+  <button class="tab hide" role="tab" aria-selected="false" data-p="ing" id="tabIng"><span class="num">04</span>Ingesta</button>
+  <span class="grow"></span>
+  <button class="btn primary navdl" id="expXlsx" type="button" title="Un archivo Excel con el resumen por área, la base de materiales y la base de movimientos, una hoja cada uno">Descargar Excel</button>
+</div></nav>
+
+<main class="wrap">
+
+<section class="panel on" id="p-rep">
+  <div class="stats">
+    <div class="stat"><div class="k">Valor libre utilizable</div><div class="v money" id="sVal">—</div><div class="d">total general · PEN</div></div>
+    <div class="stat"><div class="k">Materiales</div><div class="v" id="sMat">—</div><div class="d">códigos distintos</div></div>
+    <div class="stat"><div class="k">Posiciones</div><div class="v" id="sPos">—</div><div class="d">filas material · almacén</div></div>
+    <div class="stat"><div class="k">Movimientos</div><div class="v" id="sMov">—</div><div class="d" id="sMovD">historial acumulado</div></div>
+  </div>
+
+  <div class="focus">
+    <div class="focus-head">
+      <p class="eyebrow">El dato del día</p>
+      <h2>Resumen de valor de stock por área</h2>
+      <p>Se resaltan los niveles elevados de stock virtual en los almacenes para el seguimiento respectivo.</p>
+    </div>
+    <div class="focus-body">
+      <div class="fb-table">
+        <table class="pivot" id="tArea"><thead><tr>
+          <th>Etiquetas de fila</th><th>AREA</th><th>Suma de Valor libre util.</th><th>% del total</th><th>Materiales</th>
+        </tr></thead><tbody></tbody></table>
+      </div>
+      <div class="fb-chart">
+        <div class="ch-head">
+          <div>
+            <p class="eyebrow">Evolutivo</p>
+            <h3 id="evolTit">Stock por día</h3>
+          </div>
+          <span class="seg" id="evolModo">
+            <button type="button" data-m="area" class="on">Por área</button>
+            <button type="button" data-m="alm">Por almacén</button>
+          </span>
+        </div>
+        <div class="ch-chips" id="evolChips" role="group" aria-label="Series del evolutivo"></div>
+        <div class="ch-rango">
+          <label class="lbl">Desde <input type="date" id="evolD1"></label>
+          <label class="lbl">Hasta <input type="date" id="evolD2"></label>
+          <button class="btn" id="evolTodo" type="button">Todo</button>
+        </div>
+        <div class="ch-wrap" id="evolWrap"></div>
+      </div>
+    </div>
+    <div class="focus-foot">
+      <span class="legend"><span class="swatch"></span> Nivel elevado de stock virtual · umbral S/ <b id="thrTxt">—</b></span>
+      <span class="thctl hide" id="thrCtl"><label class="lbl" for="thr">Cambiar umbral</label>
+        <span>S/</span><input type="number" id="thr" step="50000" min="0">
+        <button class="btn" id="thrApply" type="button">Aplicar</button>
+        <span style="font-size:12px">Se guarda al publicar.</span></span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-lead">
+      <p class="eyebrow">Tabla dinámica</p>
+      <h2>Stock por material<span class="rule"></span></h2>
+      <p class="sec-sub" id="repNote"></p>
+    </div>
+    <div class="sec-tools">
+      <button class="btn" id="expRep" type="button">Descargar esta tabla (CSV)</button>
+    </div>
+  </div>
+  <div class="controls">
+    <input type="text" class="search" id="qRep" placeholder="Buscar material o descripción…">
+    <label class="lbl">Métrica
+      <span class="seg" id="segMetric">
+        <button class="on" data-m="val" type="button">Valor S/</button>
+        <button data-m="qty" type="button">Cantidad</button>
+      </span></label>
+  </div>
+  <div class="tablebox"><table class="grid" id="gRep"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+  <div class="tfoot-note"><span id="repCount">—</span><span>Clic en un encabezado para ordenar.</span></div>
+</section>
+
+<section class="panel" id="p-mat">
+  <div class="sec">
+    <div class="sec-lead">
+      <p class="eyebrow">Origen · STOCK_EXPORT · último corte cargado</p>
+      <h2>Base de materiales<span class="rule"></span></h2>
+      <p class="sec-sub" id="matNote"></p>
+    </div>
+    <div class="sec-tools">
+      <button class="btn" id="expMat" type="button">Descargar esta tabla (CSV)</button>
+    </div>
+  </div>
+  <div class="controls">
+    <input type="text" class="search" id="qMat" placeholder="Buscar material, descripción o stock especial…">
+    <label class="lbl">Almacén <select id="fMatAlm"><option value="">Todos</option></select></label>
+    <label class="chk"><input type="checkbox" id="fMatCero"> Solo con valor &gt; 0</label>
+  </div>
+  <div class="tablebox"><table class="grid" id="gMat"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+  <div class="tfoot-note"><span id="matCount">—</span></div>
+</section>
+
+<section class="panel" id="p-mov">
+  <div class="sec">
+    <div class="sec-lead">
+      <p class="eyebrow">Origen · MOV_EXPORT · historial acumulado</p>
+      <h2>Base de movimientos<span class="rule"></span></h2>
+      <p class="sec-sub" id="movNote"></p>
+    </div>
+    <div class="sec-tools">
+      <button class="btn" id="expMov" type="button">Descargar lo filtrado (CSV)</button>
+    </div>
+  </div>
+  <div class="controls">
+    <input type="text" class="search" id="qMov" placeholder="Buscar material, descripción, orden, documento…">
+    <label class="lbl">Desde <input type="date" id="fDesde"></label>
+    <label class="lbl">Hasta <input type="date" id="fHasta"></label>
+    <label class="lbl">Almacén <select id="fMovAlm"><option value="">Todos</option></select></label>
+    <label class="lbl">Área <select id="fMovAre"><option value="">Todas</option></select></label>
+    <label class="lbl">Clase <select id="fMovCls"><option value="">Todas</option></select></label>
+  </div>
+  <div class="tablebox" id="movBox"></div>
+  <div class="tfoot-note"><span id="movCount">—</span><span class="pager" id="movPager"></span></div>
+</section>
+
+<section class="panel" id="p-ing">
+  <div class="sec">
+    <div class="sec-lead">
+      <p class="eyebrow">Solo modo editor</p>
+      <h2>Ingesta de archivos<span class="rule"></span></h2>
+      <p class="sec-sub">Los Excel se leen aquí mismo en el navegador; al publicar se genera una nueva versión de esta página.</p>
+    </div>
+  </div>
+
+  <div class="panelcard">
+    <h3>Datos publicados actualmente</h3>
+    <dl class="kv" id="curInfo"></dl>
+  </div>
+
+  <div class="ingrid">
+    <div class="drop" id="dropS">
+      <h3>Archivo de stock <span class="badge">reemplaza</span></h3>
+      <div class="hint">STOCK_EXPORT_AAAAMMDD_HHMMSS.xlsx</div>
+      <input type="file" id="fileS" accept=".xlsx,.xlsm,.xls">
+      <div class="state" id="stS">Sin archivo seleccionado.</div>
+    </div>
+    <div class="drop" id="dropM">
+      <h3>Archivo de movimientos <span class="badge">acumula</span></h3>
+      <div class="hint">MOV_EXPORT_AAAAMMDD_HHMMSS.xlsx</div>
+      <input type="file" id="fileM" accept=".xlsx,.xlsm,.xls">
+      <div class="state" id="stM">Sin archivo seleccionado.</div>
+      <label class="chk" style="margin-top:11px"><input type="checkbox" id="chkReset">
+        Reemplazar el historial completo en vez de acumular</label>
+    </div>
+    <div class="drop" id="dropO">
+      <h3>Export de órdenes <span class="badge">área</span></h3>
+      <div class="hint">IW39 · Orden · Texto breve · Pto.tbjo.responsable</div>
+      <input type="file" id="fileO" accept=".xlsx,.xlsm,.xls">
+      <div class="state" id="stO">Sin archivo seleccionado.</div>
+    </div>
+  </div>
+
+  <div class="panelcard">
+    <h3>Reglas de área</h3>
+    <p style="font-size:13.5px;color:var(--ink-2);margin:0 0 13px">
+      Con esto el reporte calcula la columna <b>Área</b> de cada movimiento, sin fórmulas en Excel.
+      Una línea por regla, con el formato <code>CLAVE = ÁREA</code>.</p>
+    <div class="reglas">
+      <label><span>Puesto de trabajo responsable → área</span>
+        <textarea id="cfgPuestos" rows="9" spellcheck="false"></textarea>
+        <em>Del export de órdenes. Si el área resulta <b>PREVENTIVO</b>, se separa en ULE o CORTE
+          según las palabras de abajo.</em></label>
+      <label><span>Palabras que marcan ULE</span>
+        <textarea id="cfgClaves" rows="9" spellcheck="false"></textarea>
+        <em>Una por línea. Se buscan en el texto breve de la orden; si no aparece ninguna, el
+          movimiento queda como CORTE.</em></label>
+      <label><span>Texto de cabecera → área</span>
+        <textarea id="cfgCab" rows="9" spellcheck="false"></textarea>
+        <em>Excepciones para movimientos sin orden y sin histórico. Coincidencia exacta.</em></label>
+    </div>
+    <div class="msg" id="areaInfo"></div>
+  </div>
+
+  <div class="panelcard hide" id="ghCard">
+    <h3>Publicación automática</h3>
+    <p style="font-size:13.5px;color:var(--ink-2);margin:0 0 13px">
+      Con esto el botón <b>Publicar para todos</b> sube los datos al repositorio solo, sin que tengas
+      que arrastrar archivos. El token se guarda únicamente en este navegador: no viaja al repositorio
+      ni queda en el código de la página.</p>
+    <div class="controls" style="margin-bottom:10px">
+      <label class="lbl">Usuario <input type="text" id="ghOwner" style="width:150px" placeholder="frankinho1"></label>
+      <label class="lbl">Repositorio <input type="text" id="ghRepo" style="width:150px" placeholder="stock-pdi"></label>
+      <label class="lbl">Rama <input type="text" id="ghBranch" style="width:90px" placeholder="main"></label>
+      <label class="lbl">Token <input type="password" id="ghToken" style="width:230px" placeholder="github_pat_…" autocomplete="off"></label>
+      <button class="btn" id="ghSave" type="button">Guardar</button>
+      <button class="btn" id="ghTest" type="button">Probar conexión</button>
+      <button class="btn" id="ghClear" type="button">Borrar token</button>
+    </div>
+    <div class="msg" id="ghMsg">Sin configurar: el botón de publicar te descargará los archivos para subirlos a mano.</div>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-size:13.5px;color:var(--ink-2)">Cómo crear el token</summary>
+      <ol class="steps" style="margin-top:9px">
+        <li>En GitHub: foto de perfil → <b>Settings</b> → abajo del todo, <b>Developer settings</b>.</li>
+        <li><b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
+        <li>Nombre cualquiera, expiración la que prefieras (al vencer hay que renovarlo).</li>
+        <li>En <i>Repository access</i>: <b>Only select repositories</b> → elige solo este repositorio.</li>
+        <li>En <i>Permissions → Repository permissions</i>: <b>Contents</b> = <b>Read and write</b>. Nada más.</li>
+        <li>Genera, copia el token y pégalo arriba. GitHub no vuelve a mostrarlo.</li>
+      </ol>
+    </details>
+  </div>
+
+  <div class="panelcard">
+    <div class="controls" style="margin-bottom:0">
+      <label class="lbl">Fecha de corte <input type="date" id="inCorte"></label>
+      <label class="lbl">Publicado por <input type="text" id="inBy" placeholder="Nombre" style="width:180px"></label>
+      <label class="lbl">Umbral S/ <input type="number" id="inThr" step="50000" min="0" style="width:120px"></label>
+      <button class="btn primary" id="btnPub" type="button" disabled>Publicar para todos</button>
+      <button class="btn hide" id="btnBajar" type="button" disabled>Descargar los datos</button>
+      <button class="btn" id="btnLocal" type="button" disabled>Ver en mi pantalla</button>
+      <button class="btn" id="btnFile" type="button">Descargar reporte (.html)</button>
+    </div>
+    <div class="progress hide" id="pubBar"><i></i></div>
+    <div class="msg hide" id="pubMsg"></div>
+  </div>
+
+  <div class="panelcard">
+    <h3>Reglas de la ingesta</h3>
+    <ol class="steps">
+      <li><b>Materiales de servicio.</b> Toda fila cuyo material empiece con S se descarta, en stock y en movimientos. Abajo de cada archivo se indica cuántas se descartaron.</li>
+      <li><b>Stock: reemplaza.</b> Cada corte pisa al anterior; el reporte siempre muestra la foto del último archivo cargado.</li>
+      <li><b>Movimientos: acumula.</b> El archivo es el historial exportado, así que solo se agregan las filas que aún no están. Volver a subir el mismo archivo no duplica nada; un archivo con más periodo suma lo nuevo.</li>
+      <li><b>Sin tablas ni formatos.</b> Basta el Excel con la hoja de datos: se busca la fila de encabezados en cualquier hoja, aunque no esté en la fila 1. Si falta una columna, se indica cuál y no se publica nada.</li>
+    </ol>
+  </div>
+
+  <div class="panelcard">
+    <h3>Qué hace cada botón</h3>
+    <p style="font-size:13.5px;color:var(--ink-2);margin:0 0 10px" id="permNota">
+      La clave abre esta ventana para cualquiera, pero <b>publicar para todos</b> exige que tu cuenta
+      tenga acceso de edición al reporte. Es un permiso de la plataforma: no se puede dar con una clave.</p>
+    <ol class="steps" id="cmoPub">
+      <li><b>Publicar para todos</b> — reescribe el reporte con el corte nuevo. Todos lo ven al abrir o recargar. Requiere acceso de edición.</li>
+      <li><b>Ver en mi pantalla</b> — aplica los archivos solo para ti. Sirve para revisar un corte antes de publicarlo, o para consultarlo sin tener permisos.</li>
+      <li><b>Descargar reporte (.html)</b> — se lleva lo que ves ahora en un archivo que abre solo, sin cuenta. Útil para adjuntarlo a un correo o pasárselo a quien sí publica.</li>
+    </ol>
+  </div>
+</section>
+
+</main>
+<footer class="wrap foot">
+  Stock PDI · PA Perú · Centro L003. Valores en soles (PEN) sobre <em>Valor libre util.</em> de SAP.
+  <span id="footStamp"></span>
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<script id="DATA" type="application/json"></script>
+<script>
+(function(){
+"use strict";
+
+/* --- plantilla de la propia página, capturada antes de renderizar nada --- */
+var DEL=document.getElementById("DATA");
+var RAW=DEL.textContent; DEL.textContent="";
+var TPL_BODY=document.body.innerHTML;
+var CSSEL=document.getElementById("CSS");
+var TPL_CSS=CSSEL?CSSEL.outerHTML:"";
+
+var ADMIN_KEY="PAPERU2026";
+var AREA={C113:"COMERCIAL", C313:"COMERCIAL", E113:"EMERGENCIA BT/MT/AP",
+          F113:"FÍSICO", M113:"MTTO BT/MT/AP", O113:"OBRAS BT/MT/AP"};
+var COLS_S=["Material","Centro","Almacén","Stock especial","Número de stock especial",
+            "Unidad medida base","Libre utilización","Valor libre util."];
+var COLS_M=["Documento material","Fecha contabiliz.","Clase de movimiento","Centro","Almacén","Material",
+            "Descripción material","Un.medida de entrada","Ctd.en UM entrada","Impte.mon.local","Orden",
+            "Texto clase de mov.","Nombre del usuario","Referencia","Texto cab.documento"];
+var COLS_O=["Orden","Texto breve","Pto.tbjo.responsable"];
+var S_MAT=0,S_CEN=1,S_ALM=2,S_ESP=3,S_NESP=4,S_UM=5,S_LIB=6,S_VAL=7;
+var M_DOC=0,M_FEC=1,M_CLS=2,M_CEN=3,M_ALM=4,M_MAT=5,M_UM=6,M_CTD=7,M_IMP=8,
+    M_ORD=9,M_TCL=10,M_USR=11,M_REF=12,M_TXT=13,M_ARE=14;
+/* los 14 primeros campos vienen de SAP e identifican al movimiento;
+   el área (15º) es derivada, así que nunca entra en la comparación */
+var M_BASE=14;
+
+/* Dos formas de vivir, mismo código:
+   — incrustada (artefacto): los datos vienen en el bloque DATA de arriba.
+   — alojada (GitHub Pages u otro servidor): los datos están en ./data/base.json y ./data/mov.json,
+     y los movimientos se cargan recién cuando hacen falta, así el reporte abre igual de rápido
+     por más que crezca el historial. */
+var D={meta:{},mats:{},stock:[],mov:[]};
+var EMBEBIDO=false;
+try{ var p=JSON.parse(RAW); if(p&&p.stock&&p.stock.length){ D=p; EMBEBIDO=true; } }catch(e){}
+D.meta=D.meta||{}; D.mats=D.mats||{}; D.stock=D.stock||[]; D.mov=D.mov||[];
+
+/* --- área del movimiento -------------------------------------------------
+   Reproduce lo que antes se hacía con fórmulas en el Excel:
+   1) por Orden, contra el export de órdenes (IW39). El área de una orden sale de su
+      puesto de trabajo responsable; si ese puesto es PREVENTIVO se mira el texto breve
+      y se separa en ULE o CORTE.
+   2) si no hay orden o no se conoce, por Documento, contra el histórico de áreas ya
+      resueltas — que el reporte construye solo, congelando cada documento que resuelve.
+   3) si tampoco, por Texto de cabecera, contra la tabla de excepciones.            */
+var CFG_DEF={
+  puestos:{EAPPAP01:"AP",EAPPAP02:"AP",EBTPAP01:"EBT",EBTPAP02:"EBT",EMTPAP01:"PREVENTIVO",
+           EMTPAP02:"EMT",EMTOPAPE:"OBRAS",EOCPAPER:"COMERCIAL"},
+  cabeceras:{},
+  claves:["ULE","COLGAJO","PODA","MENSULA","CRUCETA"]
+};
+D.hist=D.hist||{};             // fecha -> totales por almacén (el evolutivo)
+D.histT=D.histT||{};            // fecha -> hora del corte que quedó ese día
+D.ordenes=D.ordenes||{};        // orden -> área
+D.areaDoc=D.areaDoc||{};        // documento -> área ya resuelta (el histórico)
+D.cfg=D.cfg||{};
+D.cfg.puestos=D.cfg.puestos||CFG_DEF.puestos;
+D.cfg.cabeceras=D.cfg.cabeceras||CFG_DEF.cabeceras;
+D.cfg.claves=D.cfg.claves||CFG_DEF.claves;
+
+function docKey(d){ return String(d==null?"":d).trim().replace(/^0+/,""); }
+function areaDeOrden(puesto, textoBreve, cfg){
+  var base=cfg.puestos[String(puesto||"").trim().toUpperCase()]||"";
+  if(base!=="PREVENTIVO") return base;
+  var t=String(textoBreve||"").toUpperCase();
+  for(var i=0;i<cfg.claves.length;i++) if(t.indexOf(cfg.claves[i])>=0) return "ULE";
+  return "CORTE";
+}
+/* calcula el área de cada movimiento y va congelando el histórico */
+function resolverAreas(rows, ordenes, areaDoc, cfg){
+  var res={porOrden:0,porDoc:0,porTexto:0,sin:0};
+  rows.forEach(function(r){
+    var a="", o=String(r[M_ORD]||"").trim();
+    if(o && ordenes[o]){ a=ordenes[o]; res.porOrden++; areaDoc[docKey(r[M_DOC])]=a; }
+    if(!a){ var d=docKey(r[M_DOC]);
+      if(areaDoc[d]){ a=areaDoc[d]; res.porDoc++; } }
+    if(!a){ var t=String(r[M_TXT]||"").trim();
+      if(t && cfg.cabeceras[t]){ a=cfg.cabeceras[t]; res.porTexto++; } }
+    if(!a) res.sin++;
+    r[M_ARE]=a;
+  });
+  return res;
+}
+/* filas viejas guardadas con 14 campos: se les abre el hueco del área */
+D.mov.forEach(function(r){ if(r.length<15) r[M_ARE]=r[M_ARE]||""; });
+
+var ST={art:null,dl:null,admin:false,metric:"val",esp:false,
+        repSort:{k:"__tot",d:-1},matSort:{k:0,d:1},movPage:0,pendS:null,pendM:null,pendO:null,
+        movListo:EMBEBIDO, movCargando:null, areasListo:EMBEBIDO, areasCargando:null,
+        evolModo:"area", evolSel:[""]};
+
+function $(s){return document.querySelector(s);}
+function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s));}
+function esc(v){return String(v==null?"":v).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function money(v){return "S/ "+(v||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function moneyC(v){return (v||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function num(v){return (v||0).toLocaleString("en-US",{maximumFractionDigits:3});}
+function comp(v){var a=Math.abs(v||0);
+  if(a>=1e6) return "S/ "+(v/1e6).toFixed(2)+" M";
+  if(a>=1e3) return "S/ "+(v/1e3).toFixed(0)+" K";
+  return money(v);}
+function area(a){return AREA[a]||a||"—";}
+var toastT=null;
+function toast(msg){
+  var t=$("#toast"); if(!t)return;
+  t.textContent=msg; t.classList.add("on");
+  clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove("on");},4200);
+}
+function fdate(s){if(!s)return"—";var p=String(s).split("-");return p.length===3?p[2]+"."+p[1]+"."+p[0].slice(2):s;}
+function desc(m){return D.mats[m]||"";}
+function thr(){return D.meta.threshold||1500000;}
+
+/* descarga un archivo generado en el navegador: usa la capacidad del artefacto si está,
+   y si no el mecanismo normal del navegador (que sí funciona en un sitio alojado) */
+function grab(nombre, datos, mime){
+  var url=URL.createObjectURL(new Blob([datos],{type:mime||"application/octet-stream"}));
+  var a=document.createElement("a");
+  a.href=url; a.download=nombre; a.style.display="none";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); },1500);
+}
+async function bajar(nombre, datos, mime){
+  if(ST.dl){ await ST.dl.save({filename:nombre, data:datos}); return; }
+  grab(nombre, datos, mime);
+}
+
+/* los movimientos pueden vivir en un archivo aparte; se traen cuando se necesitan */
+function cargarMov(){
+  if(ST.movListo) return Promise.resolve();
+  if(ST.movCargando) return ST.movCargando;
+  ST.movCargando = fetch("data/mov.json",{cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(function(j){
+    D.mov=Array.isArray(j)?j:(j.mov||[]);
+    ST.movListo=true; ST.movCargando=null;
+    fillMovFilters();
+    if(D.meta.movFrom&&!$("#fDesde").value) $("#fDesde").value=D.meta.movFrom;
+    if(D.meta.movTo&&!$("#fHasta").value) $("#fHasta").value=D.meta.movTo;
+  }).catch(function(e){
+    ST.movCargando=null;
+    throw e;
+  });
+  return ST.movCargando;
+}
+/* las tablas de área solo hacen falta para ingestar: se traen aparte */
+function cargarAreas(){
+  if(ST.areasListo) return Promise.resolve();
+  if(ST.areasCargando) return ST.areasCargando;
+  ST.areasCargando=fetch("data/areas.json",{cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(function(j){
+    D.ordenes=j.ordenes||{}; D.areaDoc=j.areaDoc||{};
+    ST.areasListo=true; ST.areasCargando=null; pintarAreaInfo();
+  }).catch(function(e){
+    /* sin el archivo se sigue: se empieza con las tablas vacías */
+    ST.areasListo=true; ST.areasCargando=null;
+    throw e;
+  });
+  return ST.areasCargando;
+}
+async function conMov(accion){
+  if(!ST.movListo){
+    toast("Cargando movimientos…");
+    try{ await cargarMov(); }
+    catch(e){ toast("No se pudieron cargar los movimientos: "+(e.message||"error de red")); return; }
+  }
+  accion();
+}
+
+function show(p){
+  $$(".tab").forEach(function(t){t.setAttribute("aria-selected", t.dataset.p===p?"true":"false");});
+  $$(".panel").forEach(function(s){s.classList.toggle("on", s.id==="p-"+p);});
+  if(p==="ing" && !ST.areasListo) cargarAreas().catch(function(){ pintarAreaInfo(); });
+  if(p==="mov" && !ST.movListo){
+    $("#movBox").innerHTML='<div class="empty">Cargando movimientos…</div>';
+    cargarMov().then(renderMov).catch(function(e){
+      $("#movBox").innerHTML='<div class="empty">No se pudieron cargar los movimientos ('+
+        esc(e.message||"error de red")+'). Revisa que exista el archivo data/mov.json.</div>';
+    });
+  }
+}
+$$(".tab").forEach(function(t){t.addEventListener("click",function(){show(t.dataset.p);});});
+
+function setAdmin(on){
+  ST.admin=on;
+  $("#tabIng").classList.toggle("hide",!on);
+  $("#thrCtl").classList.toggle("hide",!on);
+  $("#cRole").textContent = on ? "Modo editor" : "Solo lectura";
+  $("#btnAdmin").textContent = on ? "Salir" : "Modo editor";
+  $("#btnAdmin").classList.toggle("on",on);
+  $("#gate").classList.add("hide");
+  if(!on && $("#p-ing").classList.contains("on")) show("rep");
+}
+$("#btnAdmin").addEventListener("click",function(){
+  if(ST.admin){ setAdmin(false); return; }
+  var g=$("#gate"); g.classList.toggle("hide"); $("#pwErr").classList.add("hide");
+  if(!g.classList.contains("hide")) $("#pw").focus();
+});
+function tryKey(){
+  if($("#pw").value.trim()===ADMIN_KEY){ $("#pw").value=""; setAdmin(true); show("ing"); renderCur(); }
+  else $("#pwErr").classList.remove("hide");
+}
+$("#pwGo").addEventListener("click",tryKey);
+$("#pw").addEventListener("keydown",function(e){if(e.key==="Enter")tryKey();});
+
+function sortRows(rows,key,dir,typ){
+  return rows.slice().sort(function(a,b){
+    var x=a[key],y=b[key];
+    if(typ==="n") return ((+x||0)-(+y||0))*dir;
+    return String(x==null?"":x).localeCompare(String(y==null?"":y),"es")*dir;
+  });
+}
+
+/* ---------- 01 reporte ---------- */
+function stockRows(){ return ST.esp ? D.stock : D.stock.filter(function(r){return !r[S_ESP];}); }
+function almList(){ var s={}; D.stock.forEach(function(r){s[r[S_ALM]]=1;}); return Object.keys(s).sort(); }
+
+function renderArea(){
+  var t=thr(), by={}, mats={}, tot=0;
+  D.stock.forEach(function(r){
+    var a=r[S_ALM]; if(!by[a]){by[a]=0; mats[a]={};}
+    by[a]+=r[S_VAL]; tot+=r[S_VAL]; mats[a][r[S_MAT]]=1;
+  });
+  var h="";
+  Object.keys(by).sort().forEach(function(a){
+    h+='<tr class="'+(by[a]>=t?"hot":"")+'"><td class="code">'+esc(a)+'</td><td>'+esc(area(a))+'</td>'+
+       '<td class="num">S/ '+moneyC(by[a])+'</td><td class="num">'+(tot?(by[a]/tot*100).toFixed(1):"0.0")+'%</td>'+
+       '<td class="num">'+Object.keys(mats[a]).length+'</td></tr>';
+  });
+  var allMat={}; D.stock.forEach(function(r){allMat[r[S_MAT]]=1;});
+  h+='<tr class="tot"><td>Total general</td><td></td><td class="num">S/ '+moneyC(tot)+
+     '</td><td class="num">100.0%</td><td class="num">'+Object.keys(allMat).length+'</td></tr>';
+  $("#tArea tbody").innerHTML = h || '<tr><td colspan="5" class="empty">Sin datos publicados.</td></tr>';
+  $("#thrTxt").textContent = t.toLocaleString("en-US");
+  $("#thr").value=t; $("#inThr").value=t;
+}
+/* --- evolutivo de stock por día -----------------------------------------
+   Cada corte publicado deja una foto de los totales por almacén bajo su fecha.
+   Si un día se publica varias veces, la última sobrescribe: queda el dato del día.
+   Solo se guardan los seis totales de la tabla, nunca el detalle.            */
+function totalesPorAlmacen(stock){
+  var t={}; stock.forEach(function(r){ t[r[S_ALM]]=(t[r[S_ALM]]||0)+r[S_VAL]; });
+  Object.keys(t).forEach(function(k){ t[k]=Math.round(t[k]*100)/100; });
+  return t;
+}
+/* Paleta categórica validada (orden documentado del método: pasa los umbrales de
+   daltonismo y de visión normal en claro y en oscuro; probé un orden que posterga el
+   naranja y falla, así que se respeta este). El color sigue a la entidad, no al orden
+   en que se marque: quitar una serie no repinta las demás.                        */
+var SERIE_LUZ=["#2a78d6","#eb6834","#1baf7a","#eda100","#e87ba4","#008300","#4a3aa7","#e34948"];
+var SERIE_OSC=["#3987e5","#d95926","#199e70","#c98500","#d55181","#008300","#9085e9","#e66767"];
+function oscuro(){
+  var t=document.documentElement.getAttribute("data-theme");
+  if(t==="dark") return true;
+  if(t==="light") return false;
+  return !!(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+function colorSerie(i){ var p=oscuro()?SERIE_OSC:SERIE_LUZ; return p[i%p.length]; }
+
+function evolOpciones(){
+  var alm={}, ar={};
+  D.stock.forEach(function(r){ alm[r[S_ALM]]=1; ar[area(r[S_ALM])]=1; });
+  Object.keys(D.hist||{}).forEach(function(f){
+    Object.keys(D.hist[f]).forEach(function(a){ alm[a]=1; ar[area(a)]=1; });
+  });
+  return {alm:Object.keys(alm).sort(), areas:Object.keys(ar).sort()};
+}
+/* entidades del modo activo, en orden fijo: la posición define el color */
+function evolEntidades(){
+  var o=evolOpciones();
+  var base=(ST.evolModo==="alm") ? o.alm.map(function(a){return {id:"W:"+a, txt:a, sub:area(a)};})
+                                 : o.areas.map(function(a){return {id:"A:"+a, txt:a, sub:""};});
+  return [{id:"", txt:"Total general", sub:""}].concat(base);
+}
+function valorDia(dia, id){
+  var v=0, hay=false;
+  Object.keys(dia).forEach(function(a){
+    var ok = !id ? true : (id.charAt(0)==="W" ? a===id.slice(2) : area(a)===id.slice(2));
+    if(ok){ v+=dia[a]; hay=true; }
+  });
+  return hay?Math.round(v*100)/100:null;
+}
+function diasEvol(){
+  var d1=$("#evolD1").value, d2=$("#evolD2").value;
+  return Object.keys(D.hist||{}).sort().filter(function(f){
+    if(d1&&f<d1) return false;
+    if(d2&&f>d2) return false;
+    return true;
+  });
+}
+/* el eje no arranca en cero: con valores de millones que se mueven en cientos de miles,
+   cero dejaría una línea plana. Se deja un margen arriba y abajo del recorrido real. */
+function ejeY(min,max){
+  var span=max-min;
+  if(span<=0){ var p=Math.abs(max)*0.05||1; return {lo:Math.max(0,max-p), hi:max+p}; }
+  var lo=min-span*0.18;
+  if(min>=0&&lo<0) lo=0;          /* el stock no es negativo: nunca un eje bajo cero */
+  return {lo:lo, hi:max+span*0.18};
+}
+function llenarEvolChips(){
+  var ents=evolEntidades(), c=$("#evolChips"), h="";
+  ents.forEach(function(e,i){
+    var on=ST.evolSel.indexOf(e.id)>=0;
+    h+='<button type="button" class="ch-chip" data-id="'+esc(e.id)+'" aria-pressed="'+on+'" '+
+       'title="'+esc(e.sub||e.txt)+'"><i style="background:'+(on?colorSerie(i):"var(--line-2)")+'"></i>'+
+       esc(e.txt)+'</button>';
+  });
+  c.innerHTML=h;
+}
+function renderEvol(){
+  var ents=evolEntidades(), dias=diasEvol(), w=$("#evolWrap");
+  var sel=ents.filter(function(e){ return ST.evolSel.indexOf(e.id)>=0; });
+  if(!sel.length){ ST.evolSel=[""]; sel=[ents[0]]; llenarEvolChips(); }
+  $("#evolTit").textContent = sel.length===1 ? "Stock por día · "+sel[0].txt
+    : "Stock por día · "+sel.length+" series";
+
+  if(dias.length<2){
+    w.innerHTML='<div class="ch-empty">El evolutivo necesita al menos dos cortes en el rango elegido.'+
+      (dias.length?' Por ahora hay uno: '+fdate(dias[0])+'.':'')+'</div>';
+    return;
+  }
+  var series=sel.map(function(e){
+    var i=ents.findIndex(function(x){return x.id===e.id;});
+    return {id:e.id, txt:e.txt, color:colorSerie(i),
+            pts:dias.map(function(f){ return {f:f, v:valorDia(D.hist[f], e.id)}; })
+                    .filter(function(p){ return p.v!==null; })};
+  }).filter(function(s){ return s.pts.length>1; });
+  if(!series.length){ w.innerHTML='<div class="ch-empty">Las series elegidas no tienen datos en este rango.</div>'; return; }
+
+  var W=Math.round(Math.max(290, Math.min(780, w.clientWidth||520))), H=232, L=68, R=14, T=18, B=30;
+  var xs=dias.map(function(f){ return new Date(f+"T00:00:00").getTime(); });
+  var x0=Math.min.apply(null,xs), x1=Math.max.apply(null,xs); if(x1===x0) x1=x0+1;
+  var todos=[]; series.forEach(function(s){ s.pts.forEach(function(p){ todos.push(p.v); }); });
+  var e=ejeY(Math.min.apply(null,todos), Math.max.apply(null,todos));
+  var px=function(t){ return L+(t-x0)/(x1-x0)*(W-L-R); };
+  var py=function(v){ return T+(e.hi-v)/(e.hi-e.lo)*(H-T-B); };
+
+  var g="", ticks=4;
+  for(var i=0;i<=ticks;i++){
+    var v=e.lo+(e.hi-e.lo)*i/ticks, y=py(v);
+    g+='<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+(W-R)+'" y2="'+y.toFixed(1)+
+       '" stroke="var(--line)" stroke-width="1"/>'+
+       '<text x="'+(L-9)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="11" '+
+       'fill="var(--ink-3)" font-family="var(--mono)">'+comp(v).replace("S/ ","")+'</text>';
+  }
+  var cuerpo="";
+  series.forEach(function(s){
+    s.xy=s.pts.map(function(p){ return {x:px(new Date(p.f+"T00:00:00").getTime()), y:py(p.v), p:p}; });
+    cuerpo+='<path d="'+s.xy.map(function(q,i){return (i?"L":"M")+q.x.toFixed(1)+" "+q.y.toFixed(1);}).join(" ")+
+      '" fill="none" stroke="'+s.color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    s.xy.forEach(function(q){
+      cuerpo+='<circle cx="'+q.x.toFixed(1)+'" cy="'+q.y.toFixed(1)+'" r="3.5" fill="'+s.color+
+        '" stroke="var(--surface)" stroke-width="2"/>';
+    });
+  });
+  /* etiqueta directa del último valor solo cuando hay pocas series; con más, manda el hover */
+  var etv="";
+  if(series.length<=3) series.forEach(function(s){
+    var u=s.xy[s.xy.length-1];
+    etv+='<text x="'+(u.x-6).toFixed(1)+'" y="'+(u.y-12).toFixed(1)+'" text-anchor="end" font-size="12" '+
+      'font-weight="700" fill="var(--ink)" font-family="var(--mono)" paint-order="stroke" '+
+      'stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round">'+comp(u.p.v)+'</text>';
+  });
+  var etx="";
+  [0, dias.length-1].forEach(function(i){
+    if(i===0&&dias.length<3) return;
+    etx+='<text x="'+px(xs[i]).toFixed(1)+'" y="'+(H-B+18)+'" text-anchor="middle" font-size="11" '+
+      'fill="var(--ink-3)" font-family="var(--mono)">'+fdate(dias[i])+'</text>';
+  });
+
+  w.innerHTML='<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" role="img" '+
+    'aria-label="Evolutivo de stock por día">'+g+
+    '<line id="evolCross" x1="0" y1="'+T+'" x2="0" y2="'+(H-B)+'" stroke="var(--line-2)" '+
+    'stroke-width="1" stroke-dasharray="3 3" opacity="0"/>'+cuerpo+etv+etx+
+    '<rect x="'+L+'" y="'+T+'" width="'+(W-L-R)+'" height="'+(H-T-B)+'" fill="transparent"/>'+
+    '</svg><div class="ch-tip" id="evolTip"></div>'+
+    '<div class="ch-foot">'+dias.length+' cortes · del '+fdate(dias[0])+' al '+fdate(dias[dias.length-1])+
+    (D.histT&&D.histT[dias[dias.length-1]]?' · última actualización '+esc(D.histT[dias[dias.length-1]]):'')+
+    '</div>';
+
+  var svg=w.querySelector("svg"), tip=$("#evolTip"), cross=w.querySelector("#evolCross");
+  svg.addEventListener("mousemove",function(ev){
+    var r=svg.getBoundingClientRect(), mx=(ev.clientX-r.left)*(W/r.width), mejor=0, dmin=1e9;
+    xs.forEach(function(t,i){ var d=Math.abs(px(t)-mx); if(d<dmin){dmin=d; mejor=i;} });
+    var f=dias[mejor], x=px(xs[mejor]);
+    cross.setAttribute("x1",x); cross.setAttribute("x2",x); cross.setAttribute("opacity","1");
+    var h="<b>"+fdate(f)+(D.histT&&D.histT[f]?" "+esc(D.histT[f]):"")+"</b>", alto=py(e.hi);
+    series.forEach(function(s){
+      var q=null; s.xy.forEach(function(z){ if(z.p.f===f) q=z; });
+      if(!q) return;
+      if(q.y<alto||alto===py(e.hi)) alto=Math.min(alto===py(e.hi)?q.y:alto, q.y);
+      h+='<br><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+
+         s.color+'"></span> '+esc(s.txt)+" · "+money(q.p.v);
+    });
+    tip.innerHTML=h;
+    tip.style.left=(x/(W/r.width))+"px"; tip.style.top=(Math.max(alto,T+10)/(W/r.width)-10)+"px";
+    tip.classList.add("on");
+  });
+  svg.addEventListener("mouseleave",function(){ tip.classList.remove("on"); cross.setAttribute("opacity","0"); });
+}
+
+function repData(){
+  var rows=stockRows(), alm=almList(), map={};
+  rows.forEach(function(r){
+    var k=r[S_MAT];
+    if(!map[k]){ map[k]={mat:k,desc:desc(k),um:r[S_UM],__tot:0}; alm.forEach(function(a){map[k][a]=0;}); }
+    var v = ST.metric==="val" ? r[S_VAL] : r[S_LIB];
+    map[k][r[S_ALM]]+=v; map[k].__tot+=v;
+    if(!map[k].um) map[k].um=r[S_UM];
+  });
+  var out=Object.keys(map).map(function(k){return map[k];});
+  var q=$("#qRep").value.trim().toLowerCase();
+  if(q) out=out.filter(function(o){return (o.mat+" "+o.desc).toLowerCase().indexOf(q)>=0;});
+  return {rows:out, alm:alm};
+}
+function renderRep(){
+  var d=repData(), alm=d.alm, isVal=ST.metric==="val", k=ST.repSort.k;
+  var rows=sortRows(d.rows,k,ST.repSort.d,(k==="mat"||k==="desc"||k==="um")?"s":"n");
+  var g=$("#gRep"), ar=function(x){return k===x?'<span class="ar">'+(ST.repSort.d<0?"▼":"▲")+'</span>':"";};
+  var th='<tr><th data-k="mat">Material'+ar("mat")+'</th><th data-k="desc">Descripción'+ar("desc")+
+         '</th><th data-k="um">UM'+ar("um")+'</th>';
+  alm.forEach(function(a){th+='<th class="n" data-k="'+a+'" title="'+esc(area(a))+'">'+esc(a)+ar(a)+'</th>';});
+  th+='<th class="n" data-k="__tot">Total'+ar("__tot")+'</th></tr>';
+  g.querySelector("thead").innerHTML=th;
+  var b=[], t={}, gt=0; alm.forEach(function(a){t[a]=0;});
+  var lim=Math.min(rows.length,1200);
+  for(var i=0;i<lim;i++){
+    var o=rows[i], tr='<tr><td class="c">'+esc(o.mat)+'</td><td class="desc">'+esc(o.desc||"—")+
+      '</td><td class="c">'+esc(o.um||"")+'</td>';
+    alm.forEach(function(a){ var v=o[a]||0; t[a]+=v;
+      tr+='<td class="n'+(v?"":" zero")+'">'+(v?(isVal?moneyC(v):num(v)):"·")+'</td>'; });
+    gt+=o.__tot;
+    tr+='<td class="n"><b>'+(isVal?moneyC(o.__tot):num(o.__tot))+'</b></td></tr>';
+    b.push(tr);
+  }
+  g.querySelector("tbody").innerHTML=b.join("")||
+    '<tr><td colspan="'+(alm.length+4)+'" class="empty">Sin resultados para el filtro.</td></tr>';
+  var tf='<tr><td colspan="3">Total mostrado ('+lim+' materiales)</td>';
+  alm.forEach(function(a){tf+='<td class="n">'+(isVal?moneyC(t[a]):num(t[a]))+'</td>';});
+  g.querySelector("tfoot").innerHTML=tf+'<td class="n">'+(isVal?moneyC(gt):num(gt))+'</td></tr>';
+  $("#repCount").textContent=rows.length.toLocaleString("en-US")+" materiales"+
+    (rows.length>lim?" · mostrando los "+lim+" primeros del orden actual":"");
+  $("#repNote").innerHTML=(isVal?"Suma de <b>Valor libre util.</b> (PEN)":"Suma de <b>Libre utilización</b> (UM base)")+
+    " por material y almacén · <b>"+rows.length.toLocaleString("en-US")+"</b> materiales en "+
+    "<b>"+alm.length+"</b> almacenes.";
+}
+$("#gRep").querySelector("thead").addEventListener("click",function(e){
+  var th=e.target.closest("th"); if(!th||!th.dataset.k)return;
+  var k=th.dataset.k, strk=(k==="mat"||k==="desc"||k==="um");
+  if(ST.repSort.k===k) ST.repSort.d*=-1; else ST.repSort={k:k,d:strk?1:-1};
+  renderRep();
+});
+$("#qRep").addEventListener("input",renderRep);
+$("#segMetric").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b)return;
+  ST.metric=b.dataset.m;
+  $$("#segMetric button").forEach(function(x){x.classList.toggle("on",x===b);});
+  renderRep();
+});
+$("#evolChips").addEventListener("click",function(ev){
+  var b=ev.target.closest(".ch-chip"); if(!b)return;
+  var id=b.dataset.id, i=ST.evolSel.indexOf(id);
+  if(i>=0){ if(ST.evolSel.length>1) ST.evolSel.splice(i,1); }
+  else { if(ST.evolSel.length>=7){ toast("Máximo 7 series a la vez, para que se sigan distinguiendo."); return; }
+         ST.evolSel.push(id); }
+  llenarEvolChips(); renderEvol();
+});
+$("#evolModo").addEventListener("click",function(ev){
+  var b=ev.target.closest("button"); if(!b)return;
+  ST.evolModo=b.dataset.m;
+  $$("#evolModo button").forEach(function(x){ x.classList.toggle("on",x===b); });
+  ST.evolSel=[""];
+  llenarEvolChips(); renderEvol();
+});
+$("#evolD1").addEventListener("change",renderEvol);
+$("#evolD2").addEventListener("change",renderEvol);
+$("#evolTodo").addEventListener("click",function(){
+  var dd=Object.keys(D.hist||{}).sort();
+  if(dd.length){ $("#evolD1").value=dd[0]; $("#evolD2").value=dd[dd.length-1]; }
+  renderEvol();
+});
+var evolT=null;
+window.addEventListener("resize",function(){ clearTimeout(evolT); evolT=setTimeout(renderEvol,160); });
+$("#thrApply").addEventListener("click",function(){
+  D.meta.threshold=parseFloat($("#thr").value)||0; renderArea();
+});
+
+/* ---------- 02 base de materiales ---------- */
+var MAT_H=[["Material",S_MAT,""],["Descripción",1,""],["Centro",S_CEN,""],["Almacén",S_ALM,""],["Área",4,""],
+           ["Stock especial",S_ESP,""],["Nro. stock especial",S_NESP,""],["UM",S_UM,""],
+           ["Libre utilización",S_LIB,"n"],["Valor libre util.",S_VAL,"n"]];
+function matRows(){
+  var q=$("#qMat").value.trim().toLowerCase(), fa=$("#fMatAlm").value, cero=$("#fMatCero").checked;
+  return D.stock.filter(function(r){
+    if(fa&&r[S_ALM]!==fa) return false;
+    if(cero&&!(r[S_VAL]>0)) return false;
+    if(q&&(r[S_MAT]+" "+desc(r[S_MAT])+" "+r[S_NESP]+" "+r[S_ESP]).toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+}
+function renderMat(){
+  var rows=matRows(), s=ST.matSort;
+  rows=rows.slice().sort(function(a,b){
+    var x,y;
+    if(s.k===1){x=desc(a[S_MAT]);y=desc(b[S_MAT]);}
+    else if(s.k===4){x=area(a[S_ALM]);y=area(b[S_ALM]);}
+    else {x=a[s.k];y=b[s.k];}
+    if(typeof x==="number"||typeof y==="number") return ((+x||0)-(+y||0))*s.d;
+    return String(x).localeCompare(String(y),"es")*s.d;
+  });
+  var g=$("#gMat"), ar=function(i){return s.k===i?'<span class="ar">'+(s.d<0?"▼":"▲")+'</span>':"";};
+  g.querySelector("thead").innerHTML="<tr>"+MAT_H.map(function(h){
+    return '<th data-i="'+h[1]+'" class="'+h[2]+'">'+h[0]+ar(h[1])+"</th>";}).join("")+"</tr>";
+  var lim=Math.min(rows.length,1500), b=[], tl=0, tv=0;
+  for(var i=0;i<lim;i++){var r=rows[i];
+    b.push('<tr><td class="c">'+esc(r[S_MAT])+'</td><td class="desc">'+esc(desc(r[S_MAT])||"—")+
+      '</td><td class="c">'+esc(r[S_CEN])+'</td><td class="c">'+esc(r[S_ALM])+'</td><td>'+esc(area(r[S_ALM]))+
+      '</td><td class="c">'+(r[S_ESP]?'<span class="badge">'+esc(r[S_ESP])+'</span>':"")+
+      '</td><td class="c">'+esc(r[S_NESP])+'</td><td class="c">'+esc(r[S_UM])+
+      '</td><td class="n">'+num(r[S_LIB])+'</td><td class="n'+(r[S_VAL]?"":" zero")+'">'+moneyC(r[S_VAL])+'</td></tr>');
+  }
+  rows.forEach(function(r){tl+=r[S_LIB]; tv+=r[S_VAL];});
+  g.querySelector("tbody").innerHTML=b.join("")||'<tr><td colspan="10" class="empty">Sin resultados.</td></tr>';
+  g.querySelector("tfoot").innerHTML='<tr><td colspan="8">Total filtrado</td><td class="n">'+num(tl)+
+    '</td><td class="n">'+moneyC(tv)+'</td></tr>';
+  $("#matCount").textContent=rows.length.toLocaleString("en-US")+" posiciones · valor S/ "+moneyC(tv)+
+    (rows.length>lim?" · mostrando "+lim:"");
+}
+$("#gMat").querySelector("thead").addEventListener("click",function(e){
+  var th=e.target.closest("th"); if(!th)return; var i=+th.dataset.i;
+  if(ST.matSort.k===i) ST.matSort.d*=-1; else ST.matSort={k:i,d:(i===S_LIB||i===S_VAL)?-1:1};
+  renderMat();
+});
+$("#qMat").addEventListener("input",renderMat);
+$("#fMatAlm").addEventListener("change",renderMat);
+$("#fMatCero").addEventListener("change",renderMat);
+
+/* ---------- 03 base de movimientos ---------- */
+var PAGE=100;
+function movFiltered(){
+  var q=$("#qMov").value.trim().toLowerCase(), d1=$("#fDesde").value, d2=$("#fHasta").value,
+      fa=$("#fMovAlm").value, fc=$("#fMovCls").value, fr=$("#fMovAre").value;
+  return D.mov.filter(function(r){
+    if(fa&&r[M_ALM]!==fa) return false;
+    if(fc&&r[M_CLS]!==fc) return false;
+    if(fr&&(r[M_ARE]||"(sin área)")!==fr) return false;
+    if(d1&&r[M_FEC]<d1) return false;
+    if(d2&&r[M_FEC]>d2) return false;
+    if(q&&(r[M_MAT]+" "+desc(r[M_MAT])+" "+r[M_ORD]+" "+r[M_DOC]+" "+r[M_USR]+" "+r[M_REF]+" "+r[M_TXT]+" "+r[M_ARE])
+        .toLowerCase().indexOf(q)<0) return false;
+    return true;
+  });
+}
+function renderMov(){
+  var rows=movFiltered(), pages=Math.max(1,Math.ceil(rows.length/PAGE));
+  if(ST.movPage>=pages) ST.movPage=pages-1;
+  var page=rows.slice(ST.movPage*PAGE, ST.movPage*PAGE+PAGE);
+  var h='<table class="grid"><thead><tr><th>Documento</th><th>Fecha</th><th>Clase</th><th>Texto clase</th>'+
+    '<th>Almacén</th><th>Área</th><th>Material</th><th>Descripción</th><th>UM</th><th class="n">Cantidad</th>'+
+    '<th class="n">Importe S/</th><th>Orden</th><th>Usuario</th><th>Referencia</th><th>Texto cabecera</th></tr></thead><tbody>';
+  page.forEach(function(r){
+    h+='<tr><td class="c">'+esc(r[M_DOC])+'</td><td class="c">'+fdate(r[M_FEC])+'</td><td class="c">'+esc(r[M_CLS])+
+       '</td><td>'+esc(r[M_TCL])+'</td><td class="c">'+esc(r[M_ALM])+'</td>'+
+       '<td>'+(r[M_ARE]?'<span class="badge">'+esc(r[M_ARE])+'</span>':'<span class="zero">—</span>')+
+       '</td><td class="c">'+esc(r[M_MAT])+
+       '</td><td class="desc">'+esc(desc(r[M_MAT])||"—")+'</td><td class="c">'+esc(r[M_UM])+
+       '</td><td class="n'+(r[M_CTD]<0?" neg":"")+'">'+num(r[M_CTD])+
+       '</td><td class="n'+(r[M_IMP]<0?" neg":"")+'">'+moneyC(r[M_IMP])+
+       '</td><td class="c">'+esc(r[M_ORD])+'</td><td class="c">'+esc(r[M_USR])+'</td><td class="c">'+esc(r[M_REF])+
+       '</td><td class="desc">'+esc(r[M_TXT])+'</td></tr>';
+  });
+  if(!page.length) h+='<tr><td colspan="15" class="empty">Sin movimientos para el filtro.</td></tr>';
+  var ti=0,tc=0; rows.forEach(function(r){ti+=r[M_IMP]; tc+=r[M_CTD];});
+  h+='</tbody><tfoot><tr><td colspan="9">Total filtrado</td><td class="n">'+num(tc)+'</td><td class="n">'+
+     moneyC(ti)+'</td><td colspan="4"></td></tr></tfoot></table>';
+  $("#movBox").innerHTML=h;
+  $("#movCount").textContent=rows.length.toLocaleString("en-US")+" movimientos · consumo neto S/ "+moneyC(ti);
+  $("#movPager").innerHTML=
+    '<button type="button" data-g="0"'+(ST.movPage===0?" disabled":"")+'>«</button>'+
+    '<button type="button" data-g="'+(ST.movPage-1)+'"'+(ST.movPage===0?" disabled":"")+'>‹</button>'+
+    '<span style="font-family:var(--mono);font-size:12px">'+(ST.movPage+1)+" / "+pages+'</span>'+
+    '<button type="button" data-g="'+(ST.movPage+1)+'"'+(ST.movPage>=pages-1?" disabled":"")+'>›</button>'+
+    '<button type="button" data-g="'+(pages-1)+'"'+(ST.movPage>=pages-1?" disabled":"")+'>»</button>';
+}
+$("#movPager").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b||b.disabled)return;
+  ST.movPage=Math.max(0,+b.dataset.g); renderMov(); $("#movBox").scrollTop=0;
+});
+["#qMov","#fDesde","#fHasta","#fMovAlm","#fMovAre","#fMovCls"].forEach(function(s){
+  var el=$(s);
+  el.addEventListener((el.tagName==="SELECT"||el.type==="date")?"change":"input",
+    function(){ST.movPage=0; renderMov();});
+});
+function fillMovFilters(){
+  var alm={}, cls={}, are={};
+  D.mov.forEach(function(r){alm[r[M_ALM]]=1; cls[r[M_CLS]]=r[M_TCL];
+    are[r[M_ARE]||"(sin área)"]=(are[r[M_ARE]||"(sin área)"]||0)+1;});
+  var sel=$("#fMovAlm").value, selc=$("#fMovCls").value, sela=$("#fMovAre").value;
+  $("#fMovAlm").innerHTML='<option value="">Todos</option>'+Object.keys(alm).sort().map(function(a){
+    return '<option value="'+esc(a)+'">'+esc(a)+" · "+esc(area(a))+"</option>";}).join("");
+  $("#fMovCls").innerHTML='<option value="">Todas</option>'+Object.keys(cls).sort().map(function(c){
+    return '<option value="'+esc(c)+'">'+esc(c)+" · "+esc(cls[c])+"</option>";}).join("");
+  $("#fMovAre").innerHTML='<option value="">Todas</option>'+Object.keys(are).sort(function(x,y){
+    return are[y]-are[x];}).map(function(a){
+    return '<option value="'+esc(a)+'">'+esc(a)+" · "+are[a].toLocaleString("en-US")+"</option>";}).join("");
+  $("#fMovAlm").value=sel; $("#fMovCls").value=selc; $("#fMovAre").value=sela;
+}
+
+/* ---------- pintado general ---------- */
+function renderCur(){
+  var m=D.meta;
+  $("#curInfo").innerHTML=
+    "<dt>Archivo stock</dt><dd>"+esc(m.stockFile||"—")+"</dd>"+
+    "<dt>Fecha de corte</dt><dd>"+esc(m.stockDate||"—")+(m.stockTime?" · "+esc(m.stockTime)+" h":"")+"</dd>"+
+    "<dt>Posiciones</dt><dd>"+D.stock.length.toLocaleString("en-US")+"</dd>"+
+    "<dt>Archivo movimientos</dt><dd>"+esc(m.movFile||"—")+"</dd>"+
+    "<dt>Periodo</dt><dd>"+esc(m.movFrom||"—")+" a "+esc(m.movTo||"—")+"</dd>"+
+    "<dt>Movimientos</dt><dd>"+D.mov.length.toLocaleString("en-US")+"</dd>"+
+    "<dt>Publicado</dt><dd>"+esc(String(m.updatedAt||"—").replace("T"," ").slice(0,16))+" · "+
+      esc(m.updatedBy||"—")+"</dd>";
+  if(m.stockDate&&!$("#inCorte").value) $("#inCorte").value=m.stockDate;
+  if(!$("#inBy").value&&m.updatedBy&&m.updatedBy!=="Carga inicial") $("#inBy").value=m.updatedBy;
+}
+function paint(){
+  var tot=0, mset={}; D.stock.forEach(function(r){tot+=r[S_VAL]; mset[r[S_MAT]]=1;});
+  var alm=almList();
+  $("#cCorte").textContent=fdate(D.meta.stockDate)+(D.meta.stockTime?" "+D.meta.stockTime:"");
+  $("#cValor").textContent=comp(tot);
+  $("#sVal").textContent=money(tot);
+  $("#sMat").textContent=Object.keys(mset).length;
+  $("#sPos").textContent=D.stock.length.toLocaleString("en-US");
+  $("#sMov").textContent=(D.mov.length||D.meta.movRows||0).toLocaleString("en-US");
+  $("#sMovD").textContent=D.meta.movFrom?fdate(D.meta.movFrom)+" – "+fdate(D.meta.movTo):"sin datos";
+  $("#fMatAlm").innerHTML='<option value="">Todos</option>'+alm.map(function(a){
+    return '<option value="'+esc(a)+'">'+esc(a)+" · "+esc(area(a))+"</option>";}).join("");
+  $("#matNote").innerHTML="Detalle del corte al <b>"+fdate(D.meta.stockDate)+"</b>: <b>"+
+    D.stock.length.toLocaleString("en-US")+"</b> posiciones de material por almacén, por <b>"+money(tot)+
+    "</b>. Cada corte reemplaza al anterior.";
+  $("#movNote").innerHTML="Historial acumulado de consumos y devoluciones: <b>"+
+    D.mov.length.toLocaleString("en-US")+"</b> movimientos entre <b>"+fdate(D.meta.movFrom)+"</b> y <b>"+
+    fdate(D.meta.movTo)+"</b>. Cada ingesta suma lo que aún no está.";
+  $("#footStamp").textContent="Publicado "+String(D.meta.updatedAt||"").replace("T"," ").slice(0,16)+
+    (D.meta.updatedBy?" por "+D.meta.updatedBy:"");
+  fillMovFilters();
+  if(D.meta.movFrom&&!$("#fDesde").value) $("#fDesde").value=D.meta.movFrom;
+  if(D.meta.movTo&&!$("#fHasta").value) $("#fHasta").value=D.meta.movTo;
+  pintarCfg(); pintarAreaInfo(); llenarEvolChips();
+  if(!$("#evolD1").value){ var dd=Object.keys(D.hist||{}).sort();
+    if(dd.length){ $("#evolD1").value=dd[0]; $("#evolD2").value=dd[dd.length-1]; } }
+  renderArea(); renderEvol(); renderRep(); renderMat(); renderMov(); renderCur();
+}
+
+/* ---------- 04 ingesta ---------- */
+var XLSX_URL="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+var xlsxP=null;
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  if(xlsxP) return xlsxP;
+  xlsxP=new Promise(function(res,rej){
+    var s=document.createElement("script"); s.src=XLSX_URL;
+    s.onload=function(){res(window.XLSX);};
+    s.onerror=function(){rej(new Error("No se pudo cargar el lector de Excel. Revisa tu conexión."));};
+    document.head.appendChild(s);
+  });
+  return xlsxP;
+}
+function sv(v){return v==null?"":String(v).trim();}
+function nv(v){ if(v===""||v==null) return 0;
+  var n=typeof v==="number"?v:parseFloat(String(v).replace(/,/g,""));
+  return isNaN(n)?0:Math.round(n*100)/100; }
+function dv(v){
+  if(v instanceof Date) return v.getFullYear()+"-"+String(v.getMonth()+1).padStart(2,"0")+"-"+
+    String(v.getDate()).padStart(2,"0");
+  var s=sv(v), m=s.match(/^(\d{2})[./-](\d{2})[./-](\d{4})/);
+  if(m) return m[3]+"-"+m[2]+"-"+m[1];
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m?m[0]:s;
+}
+function corteFromName(n){var m=String(n).match(/(20\d{2})(\d{2})(\d{2})/); return m?m[1]+"-"+m[2]+"-"+m[3]:"";}
+/* los export de SAP traen la hora en el nombre: STOCK_EXPORT_AAAAMMDD_HHMMSS */
+function horaFromName(n){var m=String(n).match(/20\d{6}[_-](\d{2})(\d{2})/); return m?m[1]+":"+m[2]:"";}
+
+/* materiales de servicio: se descartan en toda ingesta */
+function isServicio(m){ return /^s/i.test(m); }
+
+/* localiza la fila de encabezados en cualquier hoja, sin depender de tablas ni de la fila 1 */
+function findTable(X,wb,cols,label){
+  var bestMiss=null, bestNm="";
+  for(var s=0;s<wb.SheetNames.length;s++){
+    var nm=wb.SheetNames[s];
+    var aoa=X.utils.sheet_to_json(wb.Sheets[nm],{header:1,raw:true,defval:""});
+    var lim=Math.min(aoa.length,30);
+    for(var i=0;i<lim;i++){
+      var hdr=(aoa[i]||[]).map(sv);
+      var miss=cols.filter(function(c){return hdr.indexOf(c)<0;});
+      if(!miss.length) return {aoa:aoa,hdr:hdr,row:i,sheet:nm};
+      if(bestMiss===null||miss.length<bestMiss.length){ bestMiss=miss; bestNm=nm; }
+    }
+  }
+  throw new Error("No se encontró la tabla de "+label+". En la hoja «"+(bestNm||"?")+
+    "» faltan estas columnas: "+((bestMiss||cols).join(", ")));
+}
+function readWB(X,file){
+  return file.arrayBuffer().then(function(b){return X.read(b,{type:"array",cellDates:true});});
+}
+async function readStock(file){
+  var X=await loadXLSX(), wb=await readWB(X,file);
+  var t=findTable(X,wb,COLS_S,"stock");
+  var ix={}; COLS_S.forEach(function(c){ix[c]=t.hdr.indexOf(c);});
+  var rows=[], tot=0, skip=0;
+  for(var i=t.row+1;i<t.aoa.length;i++){
+    var a=t.aoa[i]; if(!a) continue;
+    var mat=sv(a[ix["Material"]]); if(!mat) continue;
+    if(isServicio(mat)){ skip++; continue; }
+    var v=nv(a[ix["Valor libre util."]]); tot+=v;
+    rows.push([mat,sv(a[ix["Centro"]]),sv(a[ix["Almacén"]]),sv(a[ix["Stock especial"]]),
+      sv(a[ix["Número de stock especial"]]),sv(a[ix["Unidad medida base"]]),
+      nv(a[ix["Libre utilización"]]),v]);
+  }
+  if(!rows.length) throw new Error("El archivo de stock no tiene filas utilizables.");
+  return {rows:rows,total:tot,skip:skip,sheet:t.sheet,name:file.name};
+}
+async function readMov(file){
+  var X=await loadXLSX(), wb=await readWB(X,file);
+  var t=findTable(X,wb,COLS_M,"movimientos");
+  var ix={}; COLS_M.forEach(function(c){ix[c]=t.hdr.indexOf(c);});
+  var rows=[], dic={}, skip=0;
+  for(var i=t.row+1;i<t.aoa.length;i++){
+    var a=t.aoa[i]; if(!a) continue;
+    var doc=sv(a[ix["Documento material"]]); if(!doc) continue;
+    var mat=sv(a[ix["Material"]]);
+    if(isServicio(mat)){ skip++; continue; }
+    var de=sv(a[ix["Descripción material"]]);
+    if(mat&&de&&!dic[mat]) dic[mat]=de;
+    rows.push([doc,dv(a[ix["Fecha contabiliz."]]),sv(a[ix["Clase de movimiento"]]),sv(a[ix["Centro"]]),
+      sv(a[ix["Almacén"]]),mat,sv(a[ix["Un.medida de entrada"]]),nv(a[ix["Ctd.en UM entrada"]]),
+      nv(a[ix["Impte.mon.local"]]),sv(a[ix["Orden"]]),sv(a[ix["Texto clase de mov."]]),
+      sv(a[ix["Nombre del usuario"]]),sv(a[ix["Referencia"]]),sv(a[ix["Texto cab.documento"]]),""]);
+  }
+  if(!rows.length) throw new Error("El archivo de movimientos no tiene filas utilizables.");
+  return {rows:rows,dic:dic,skip:skip,sheet:t.sheet,name:file.name};
+}
+/* export de órdenes (IW39): deja orden -> área ya calculada */
+async function readOrdenes(file){
+  var X=await loadXLSX(), wb=await readWB(X,file);
+  var t=findTable(X,wb,COLS_O,"órdenes (IW39)");
+  var ix={}; COLS_O.forEach(function(c){ix[c]=t.hdr.indexOf(c);});
+  var map={}, n=0, sinArea=0;
+  for(var i=t.row+1;i<t.aoa.length;i++){
+    var a=t.aoa[i]; if(!a) continue;
+    var o=sv(a[ix["Orden"]]); if(!o) continue;
+    if(map[o]!==undefined) continue;          // la primera coincidencia manda
+    var ar=areaDeOrden(a[ix["Pto.tbjo.responsable"]], a[ix["Texto breve"]], D.cfg);
+    if(!ar) sinArea++;
+    map[o]=ar; n++;
+  }
+  if(!n) throw new Error("El export de órdenes no tiene filas utilizables.");
+  return {map:map,n:n,sinArea:sinArea,sheet:t.sheet,name:file.name};
+}
+
+/* el historial se acumula: se agrega solo lo que aún no está, respetando repeticiones legítimas */
+function keyOf(r){ return r.slice(0,M_BASE).join("\u001F"); }
+function mergeMov(viejo,nuevo){
+  var have={}, seen={}, out=viejo.slice(), added=0, i, k;
+  for(i=0;i<viejo.length;i++){ k=keyOf(viejo[i]); have[k]=(have[k]||0)+1; }
+  for(i=0;i<nuevo.length;i++){
+    k=keyOf(nuevo[i]); seen[k]=(seen[k]||0)+1;
+    if(seen[k]>(have[k]||0)){ out.push(nuevo[i]); added++; }
+  }
+  return {rows:ordenar(out), added:added};
+}
+function ordenar(rows){
+  return rows.sort(function(a,b){
+    if(a[M_FEC]!==b[M_FEC]) return a[M_FEC]<b[M_FEC]?1:-1;
+    if(a[M_DOC]!==b[M_DOC]) return a[M_DOC]<b[M_DOC]?1:-1;
+    return 0;
+  });
+}
+function rango(rows){
+  var f1=null,f2=null;
+  rows.forEach(function(r){var f=r[M_FEC]; if(!f)return;
+    if(!f1||f<f1)f1=f; if(!f2||f>f2)f2=f;});
+  return {from:f1,to:f2};
+}
+function state(sel,html,cls){ var e=$(sel); e.className="state "+(cls||""); e.innerHTML=html; }
+
+/* las reglas se editan como texto plano: CLAVE = VALOR, una por línea */
+function mapATexto(m){
+  return Object.keys(m).sort().map(function(k){return k+" = "+m[k];}).join("\n");
+}
+function textoAMapa(t){
+  var m={};
+  String(t||"").split("\n").forEach(function(l){
+    var i=l.indexOf("=");
+    if(i<0) return;
+    var k=l.slice(0,i).trim(), v=l.slice(i+1).trim();
+    if(k) m[k]=v;
+  });
+  return m;
+}
+function listaATexto(a){ return (a||[]).join("\n"); }
+function textoALista(t){
+  return String(t||"").split("\n").map(function(l){return l.trim().toUpperCase();})
+    .filter(function(l){return !!l;});
+}
+function pintarCfg(){
+  $("#cfgPuestos").value=mapATexto(D.cfg.puestos);
+  $("#cfgCab").value=mapATexto(D.cfg.cabeceras);
+  $("#cfgClaves").value=listaATexto(D.cfg.claves);
+}
+function leerCfg(){
+  return { puestos:textoAMapa($("#cfgPuestos").value),
+           cabeceras:textoAMapa($("#cfgCab").value),
+           claves:textoALista($("#cfgClaves").value) };
+}
+function pintarAreaInfo(){
+  var c={}, sin=0;
+  D.mov.forEach(function(r){ var a=r[M_ARE]; if(a) c[a]=(c[a]||0)+1; else sin++; });
+  var top=Object.keys(c).sort(function(x,y){return c[y]-c[x];})
+    .map(function(k){return k+" "+c[k].toLocaleString("en-US");}).join(" · ");
+  $("#areaInfo").className="msg";
+  $("#areaInfo").innerHTML = D.mov.length
+    ? "<b>"+Object.keys(D.ordenes).length.toLocaleString("en-US")+"</b> órdenes conocidas · <b>"+
+      Object.keys(D.areaDoc).length.toLocaleString("en-US")+"</b> documentos con área ya congelada."+
+      (top?"<br>Reparto actual: "+top:"")+(sin?" · <b>"+sin.toLocaleString("en-US")+"</b> sin área":"")
+    : "Aún no hay movimientos cargados.";
+}
+function pubReady(){
+  var listo=!!(ST.pendS||ST.pendM||ST.pendO);
+  $("#btnPub").disabled=!listo; $("#btnLocal").disabled=!listo; $("#btnBajar").disabled=!listo;
+}
+function pmsg(t,cls){ var m=$("#pubMsg"); m.className="msg "+(cls||""); m.textContent=t; m.classList.remove("hide"); }
+function bar(p){ var b=$("#pubBar"); b.classList.remove("hide"); b.querySelector("i").style.width=p+"%"; }
+
+$("#fileS").addEventListener("change",async function(){
+  var f=this.files[0]; if(!f)return;
+  state("#stS","Leyendo archivo…");
+  try{ var d=await readStock(f); ST.pendS=d;
+    $("#inCorte").value=corteFromName(f.name)||$("#inCorte").value;
+    ST.pendHora=horaFromName(f.name);
+    state("#stS","<b>"+esc(f.name)+"</b> · hoja «"+esc(d.sheet)+"»<br>"+
+      d.rows.length.toLocaleString("en-US")+" posiciones · total S/ "+moneyC(d.total)+
+      (d.skip?"<br>"+d.skip.toLocaleString("en-US")+" filas de servicio (material S…) descartadas":"")+
+      "<br><span style='color:var(--ink-3)'>Reemplaza por completo el stock actual.</span>","ok");
+  }catch(e){ ST.pendS=null; state("#stS",esc(e.message),"bad"); }
+  pubReady();
+});
+$("#fileM").addEventListener("change",async function(){
+  var f=this.files[0]; if(!f)return;
+  state("#stM","Leyendo archivo… (puede tardar unos segundos)");
+  try{ var d=await readMov(f); ST.pendM=d;
+    if(!ST.movListo){ state("#stM","Cargando el historial actual para comparar…"); await cargarMov(); }
+    var rg=rango(d.rows), prev=mergeMov(D.mov,d.rows);
+    state("#stM","<b>"+esc(f.name)+"</b> · hoja «"+esc(d.sheet)+"»<br>"+
+      d.rows.length.toLocaleString("en-US")+" movimientos leídos · "+esc(rg.from||"—")+" a "+esc(rg.to||"—")+
+      (d.skip?"<br>"+d.skip.toLocaleString("en-US")+" filas de servicio (material S…) descartadas":"")+
+      "<br><span style='color:var(--ink-3)'>"+prev.added.toLocaleString("en-US")+
+      " nuevos respecto al historial · quedaría en "+prev.rows.length.toLocaleString("en-US")+"</span>","ok");
+  }catch(e){ ST.pendM=null; state("#stM",esc(e.message),"bad"); }
+  pubReady();
+});
+$("#fileO").addEventListener("change",async function(){
+  var f=this.files[0]; if(!f)return;
+  state("#stO","Leyendo archivo…");
+  try{
+    D.cfg=leerCfg();
+    var d=await readOrdenes(f); ST.pendO=d;
+    var nuevas=0; Object.keys(d.map).forEach(function(o){ if(D.ordenes[o]===undefined) nuevas++; });
+    state("#stO","<b>"+esc(f.name)+"</b> · hoja «"+esc(d.sheet)+"»<br>"+
+      d.n.toLocaleString("en-US")+" órdenes leídas · "+nuevas.toLocaleString("en-US")+" nuevas"+
+      (d.sinArea?"<br>"+d.sinArea.toLocaleString("en-US")+" sin área: revisa el mapa de puestos":"")+
+      "<br><span style='color:var(--ink-3)'>Las órdenes se acumulan con las ya conocidas.</span>",
+      d.sinArea?"":"ok");
+  }catch(e){ ST.pendO=null; state("#stO",esc(e.message),"bad"); }
+  pubReady();
+});
+[["dropS","#fileS"],["dropM","#fileM"],["dropO","#fileO"]].forEach(function(p){
+  var el=document.getElementById(p[0]), inp=$(p[1]);
+  el.addEventListener("dragover",function(e){e.preventDefault(); el.classList.add("over");});
+  el.addEventListener("dragleave",function(){el.classList.remove("over");});
+  el.addEventListener("drop",function(e){
+    e.preventDefault(); el.classList.remove("over");
+    if(e.dataTransfer.files&&e.dataTransfer.files[0]){
+      var dt=new DataTransfer(); dt.items.add(e.dataTransfer.files[0]);
+      inp.files=dt.files; inp.dispatchEvent(new Event("change"));
+    }
+  });
+});
+
+var MARK=/<script id="DATA"[^>]*><\/script>/;
+function buildDoc(data){
+  if(!MARK.test(TPL_BODY)||!TPL_CSS) throw new Error("No se pudo reconstruir la página.");
+  var json=JSON.stringify(data).replace(/<\//g,"<\\/");
+  var body=TPL_BODY.replace(MARK,'<script id="DATA" type="application\/json">'+json+'<\/script>');
+  return '<!doctype html><html lang="es"><head><meta charset="utf-8">'+
+    '<meta name="viewport" content="width=device-width, initial-scale=1">'+
+    '<title>Stock PDI PA Perú<\/title>'+
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700'+
+    '&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">'+
+    TPL_CSS+'<\/head><body>'+body+'<\/body><\/html>';
+}
+/* --- publicación directa al repositorio ---------------------------------
+   Un sitio estático no puede escribirse solo, pero la API de GitHub sí acepta
+   commits desde el navegador. El token lo pega la persona y vive únicamente en
+   este navegador (localStorage): nunca está en el código ni en el repositorio.
+   Se arma UN commit con los tres archivos, para que el sitio nunca quede a medio
+   camino con unos datos nuevos y otros viejos.                              */
+var GH_KEY="stockpdi_gh";
+function ghLeer(){
+  try{ return JSON.parse(localStorage.getItem(GH_KEY)||"{}")||{}; }catch(e){ return {}; }
+}
+function ghGuardar(c){
+  try{ localStorage.setItem(GH_KEY, JSON.stringify(c)); return true; }catch(e){ return false; }
+}
+function ghCfg(){
+  return { owner:$("#ghOwner").value.trim(), repo:$("#ghRepo").value.trim(),
+           branch:$("#ghBranch").value.trim()||"main", token:$("#ghToken").value.trim() };
+}
+function ghListo(c){ c=c||ghCfg(); return !!(c.owner&&c.repo&&c.token); }
+function ghMsg(t,cls){ var m=$("#ghMsg"); m.className="msg "+(cls||""); m.innerHTML=t; }
+
+function b64(txt){
+  var bytes=new TextEncoder().encode(txt), bin="", paso=0x8000;
+  for(var i=0;i<bytes.length;i+=paso) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+paso));
+  return btoa(bin);
+}
+function ghHead(c){
+  return {Authorization:"Bearer "+c.token, Accept:"application/vnd.github+json",
+          "X-GitHub-Api-Version":"2022-11-28"};
+}
+async function ghFalla(r){
+  var d=""; try{ d=(await r.json()).message||""; }catch(e){}
+  if(r.status===401) return "El token no es válido o expiró. Genera uno nuevo y vuelve a pegarlo.";
+  if(r.status===403) return "El token no tiene permiso de escritura sobre este repositorio "+
+    "(necesita Contents: Read and write).";
+  if(r.status===404) return "No se encontró el repositorio o la rama. Revisa usuario, repositorio y rama, "+
+    "y que el token incluya ese repositorio.";
+  if(r.status===409) return "Alguien más cambió el repositorio mientras publicabas. Vuelve a intentarlo.";
+  if(r.status===422) return "GitHub rechazó el contenido"+(d?": "+d:"")+".";
+  return "Error de GitHub ("+r.status+")"+(d?": "+d:"")+".";
+}
+async function ghApi(c, ruta, opts){
+  var r=await fetch("https://api.github.com/repos/"+c.owner+"/"+c.repo+ruta,
+    Object.assign({headers:ghHead(c)}, opts||{}));
+  if(!r.ok) throw new Error(await ghFalla(r));
+  return r.json();
+}
+/* un solo commit con los tres archivos */
+async function ghPublicar(c, archivos, mensaje, avance){
+  avance=avance||function(){};
+  avance(10,"Leyendo el estado del repositorio…");
+  var ref=await ghApi(c,"/git/ref/heads/"+encodeURIComponent(c.branch));
+  var commitBase=await ghApi(c,"/git/commits/"+ref.object.sha);
+  var blobs=[], i=0;
+  for(var k in archivos){
+    i++; avance(10+i*22, "Subiendo "+k+"…");
+    var b=await ghApi(c,"/git/blobs",{method:"POST",
+      headers:Object.assign({"Content-Type":"application/json"},ghHead(c)),
+      body:JSON.stringify({content:b64(archivos[k]), encoding:"base64"})});
+    blobs.push({path:"data/"+k, mode:"100644", type:"blob", sha:b.sha});
+  }
+  avance(80,"Armando el commit…");
+  var tree=await ghApi(c,"/git/trees",{method:"POST",
+    headers:Object.assign({"Content-Type":"application/json"},ghHead(c)),
+    body:JSON.stringify({base_tree:commitBase.tree.sha, tree:blobs})});
+  var commit=await ghApi(c,"/git/commits",{method:"POST",
+    headers:Object.assign({"Content-Type":"application/json"},ghHead(c)),
+    body:JSON.stringify({message:mensaje, tree:tree.sha, parents:[ref.object.sha]})});
+  avance(92,"Actualizando la rama…");
+  await ghApi(c,"/git/refs/heads/"+encodeURIComponent(c.branch),{method:"PATCH",
+    headers:Object.assign({"Content-Type":"application/json"},ghHead(c)),
+    body:JSON.stringify({sha:commit.sha})});
+  avance(100,"Publicado.");
+  return commit.sha;
+}
+
+/* arma el conjunto de datos nuevo a partir de lo cargado, sin tocar nada todavía */
+function armar(){
+  var nd={meta:Object.assign({},D.meta), mats:Object.assign({},D.mats), stock:D.stock, mov:D.mov,
+          ordenes:Object.assign({},D.ordenes), areaDoc:Object.assign({},D.areaDoc),
+          cfg:leerCfg()}, nuevos=0;
+  if(ST.pendO) Object.keys(ST.pendO.map).forEach(function(o){ nd.ordenes[o]=ST.pendO.map[o]; });
+  if(ST.pendS){
+    nd.stock=ST.pendS.rows;
+    nd.meta.stockFile=ST.pendS.name;
+    nd.meta.stockDate=$("#inCorte").value||corteFromName(ST.pendS.name)||nd.meta.stockDate||"";
+    nd.meta.stockTime=horaFromName(ST.pendS.name)||ST.pendHora||"";
+  }
+  if(ST.pendM){
+    var mg = $("#chkReset").checked
+      ? {rows:ordenar(ST.pendM.rows.slice()), added:ST.pendM.rows.length}
+      : mergeMov(D.mov, ST.pendM.rows);
+    nd.mov=mg.rows; nuevos=mg.added;
+    nd.mats=Object.assign({},nd.mats,ST.pendM.dic);
+    var rg=rango(mg.rows);
+    nd.meta.movFile=ST.pendM.name; nd.meta.movFrom=rg.from; nd.meta.movTo=rg.to;
+  }
+  /* foto del día para el evolutivo: la clave es la fecha de corte, así que publicar
+     dos veces el mismo día deja la última, no dos puntos */
+  nd.hist=Object.assign({},D.hist);
+  nd.histT=Object.assign({},D.histT);
+  if(nd.meta.stockDate){
+    nd.hist[nd.meta.stockDate]=totalesPorAlmacen(nd.stock);
+    if(nd.meta.stockTime) nd.histT[nd.meta.stockDate]=nd.meta.stockTime;
+  }
+
+  /* con las órdenes y el histórico al día, se recalcula el área de TODO el historial:
+     un IW39 nuevo puede resolver movimientos viejos que antes quedaron sin área */
+  nd.mov=nd.mov.map(function(r){ return r.slice(); });
+  var res=resolverAreas(nd.mov, nd.ordenes, nd.areaDoc, nd.cfg);
+  nd.meta.areaSin=res.sin;
+
+  nd.meta.threshold=parseFloat($("#inThr").value)||thr();
+  nd.meta.updatedAt=new Date().toISOString().slice(0,16);
+  nd.meta.updatedBy=$("#inBy").value.trim()||"Editor";
+  return {nd:nd, nuevos:nuevos, conStock:!!ST.pendS, conMov:!!ST.pendM, conOrd:!!ST.pendO, area:res};
+}
+function resumen(a){
+  var p=[];
+  if(a.conStock) p.push("stock al "+fdate(a.nd.meta.stockDate)+" con "+
+    a.nd.stock.length.toLocaleString("en-US")+" posiciones");
+  if(a.conMov) p.push(a.nuevos.toLocaleString("en-US")+" movimientos nuevos, historial en "+
+    a.nd.mov.length.toLocaleString("en-US"));
+  if(a.conOrd) p.push(Object.keys(a.nd.ordenes).length.toLocaleString("en-US")+" órdenes conocidas");
+  if(a.conStock) p.push("evolutivo con "+Object.keys(a.nd.hist).length+" cortes");
+  if(a.area) p.push("área resuelta en "+(a.nd.mov.length-a.area.sin).toLocaleString("en-US")+
+    " de "+a.nd.mov.length.toLocaleString("en-US")+" movimientos");
+  return p.join(" · ");
+}
+function datosComoArchivos(nd){
+  var base={meta:nd.meta, mats:nd.mats, stock:nd.stock, cfg:nd.cfg, hist:nd.hist, histT:nd.histT};
+  base.meta.movRows=nd.mov.length;
+  return { "base.json":JSON.stringify(base),
+           "mov.json":JSON.stringify(nd.mov),
+           "areas.json":JSON.stringify({ordenes:nd.ordenes, areaDoc:nd.areaDoc}) };
+}
+function aplicar(a){
+  D=a.nd; ST.pendS=null; ST.pendM=null; ST.pendO=null;
+  $("#fileS").value=""; $("#fileM").value=""; $("#fileO").value="";
+  state("#stS","Sin archivo seleccionado."); state("#stM","Sin archivo seleccionado.");
+  state("#stO","Sin archivo seleccionado.");
+  paint(); pubReady();
+}
+
+$("#btnPub").addEventListener("click",async function(){
+  if(!ST.pendS&&!ST.pendM&&!ST.pendO) return;
+  this.disabled=true; $("#btnLocal").disabled=true; $("#pubMsg").classList.add("hide"); bar(8);
+  var a=null;
+  try{
+    if(!ST.movListo) await cargarMov();
+    if(!ST.areasListo) try{ await cargarAreas(); }catch(e){}
+    a=armar(); bar(30);
+
+    /* alojada: si hay conexión con GitHub se sube sola; si no, se descargan los archivos */
+    if(!ST.art){
+      var archivos=datosComoArchivos(a.nd);
+      var c=ghCfg();
+      if(ghListo(c)){
+        var sha=await ghPublicar(c, archivos,
+          "Corte "+(a.nd.meta.stockDate||"")+" · "+resumen(a),
+          function(p,txt){ bar(p); pmsg(txt,""); });
+        aplicar(a);
+        pmsg("Publicado en "+esc(c.owner)+"/"+esc(c.repo)+" ("+sha.slice(0,7)+") con "+resumen(a)+
+          ". GitHub tarda un minuto en desplegar; después recarga la página.","good");
+        return;
+      }
+      await bajar("base.json", archivos["base.json"], "application/json"); bar(55);
+      await bajar("mov.json", archivos["mov.json"], "application/json"); bar(80);
+      await bajar("areas.json", archivos["areas.json"], "application/json");
+      aplicar(a); bar(100);
+      pmsg("Listos base.json, mov.json y areas.json con "+resumen(a)+". Súbelos a la carpeta data/ del "+
+        "repositorio, reemplazando los que están. Si configuras la publicación automática arriba, "+
+        "este botón los sube solo.","good");
+      return;
+    }
+
+    var html=buildDoc(a.nd); bar(55);
+    await ST.art.publish(html);
+    bar(100);
+    pmsg("Publicado: "+resumen(a)+". La página se está recargando con el nuevo corte para todos.","good");
+    return;
+  }catch(e){
+    var c=e&&e.code;
+    if(c==="not_writer"||c==="not_granted"||c==="capability_disabled"){
+      if(a){ aplicar(a);
+        pmsg("Tu acceso a este link es de solo lectura, así que no se pudo publicar para todos. "+
+          "Los datos quedaron aplicados en tu pantalla ("+resumen(a)+"): puedes revisarlos y descargar el "+
+          "reporte o los CSV. Para publicar, pide acceso de edición al dueño del reporte.","bad");
+      } else pmsg("No se pudo publicar: tu acceso es de solo lectura.","bad");
+    }
+    else if(c==="conflict")
+      pmsg("Alguien publicó otra versión mientras cargabas. Recarga la página y vuelve a subir los archivos.","bad");
+    else
+      pmsg("No se pudo publicar: "+((e&&e.message)||"error inesperado")+".","bad");
+    bar(100);
+  }finally{ this.disabled=false; pubReady(); }
+});
+
+$("#btnLocal").addEventListener("click",function(){
+  if(!ST.pendS&&!ST.pendM) return;
+  conMov(function(){
+    var a=armar(); aplicar(a);
+    pmsg("Aplicado en tu pantalla: "+resumen(a)+". Nadie más lo ve hasta que se publique.","good");
+  });
+});
+
+$("#btnFile").addEventListener("click",async function(){
+  if(!ST.dl){ pmsg("La descarga no está disponible en esta vista.","bad"); return; }
+  this.disabled=true;
+  try{
+    var html=buildDoc(D);
+    await ST.dl.save({filename:"stock_pdi_"+String(D.meta.stockDate||"").replace(/-/g,"")+".html",
+                      data:html});
+    pmsg("Descargado el reporte con los datos que ves ahora. Ese archivo abre solo, sin cuenta.","good");
+  }catch(e){ pmsg("No se pudo descargar: "+((e&&e.message)||"error inesperado")+".","bad"); }
+  this.disabled=false;
+});
+
+/* ---------- descargas CSV ---------- */
+function csv(rows){
+  return rows.map(function(r){return r.map(function(c){
+    var s=String(c==null?"":c);
+    return /[",;\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+  }).join(";");}).join("\r\n");
+}
+async function save(name,text){
+  try{ await bajar(name,"﻿"+text,"text/csv;charset=utf-8"); }
+  catch(e){
+    if(e&&e.code==="declined") toast("Descarga cancelada.");
+    else toast("No se pudo descargar: "+((e&&e.message)||"error inesperado"));
+  }
+}
+$("#expRep").addEventListener("click",function(){
+  var d=repData(), alm=d.alm, isVal=ST.metric==="val", dec=isVal?2:3;
+  var head=["Material","Descripcion","UM"].concat(alm).concat(["Total"]);
+  var body=sortRows(d.rows,ST.repSort.k,ST.repSort.d,"n").map(function(o){
+    return [o.mat,o.desc,o.um].concat(alm.map(function(a){return (o[a]||0).toFixed(dec);}))
+      .concat([o.__tot.toFixed(dec)]);});
+  save("stock_por_material_"+(D.meta.stockDate||"")+".csv", csv([head].concat(body)));
+});
+$("#expMat").addEventListener("click",function(){
+  var head=["Material","Descripcion","Centro","Almacen","Area","Stock especial","Nro stock especial","UM",
+            "Libre utilizacion","Valor libre util"];
+  var body=matRows().map(function(r){
+    return [r[S_MAT],desc(r[S_MAT]),r[S_CEN],r[S_ALM],area(r[S_ALM]),r[S_ESP],r[S_NESP],r[S_UM],
+            r[S_LIB].toFixed(3),r[S_VAL].toFixed(2)];});
+  save("base_materiales_"+(D.meta.stockDate||"")+".csv", csv([head].concat(body)));
+});
+/* un solo Excel: resumen por área + las dos bases, una hoja cada una */
+function areaAOA(){
+  var t=thr(), by={}, mats={}, tot=0;
+  D.stock.forEach(function(r){
+    var a=r[S_ALM]; if(!by[a]){by[a]=0; mats[a]={};}
+    by[a]+=r[S_VAL]; tot+=r[S_VAL]; mats[a][r[S_MAT]]=1;
+  });
+  var aoa=[["Etiquetas de fila","AREA","Suma de Valor libre util.","% del total","Materiales","Nivel elevado"]];
+  Object.keys(by).sort().forEach(function(a){
+    aoa.push([a,area(a),by[a],tot?by[a]/tot:0,Object.keys(mats[a]).length,by[a]>=t?"SÍ":""]);
+  });
+  var all={}; D.stock.forEach(function(r){all[r[S_MAT]]=1;});
+  aoa.push(["Total general","",tot,1,Object.keys(all).length,""]);
+  return aoa;
+}
+function matAOA(){
+  var aoa=[["Material","Descripcion","Centro","Almacen","Area","Stock especial","Nro stock especial","UM",
+            "Libre utilizacion","Valor libre util"]];
+  D.stock.forEach(function(r){
+    aoa.push([r[S_MAT],desc(r[S_MAT]),r[S_CEN],r[S_ALM],area(r[S_ALM]),r[S_ESP],r[S_NESP],r[S_UM],
+              r[S_LIB],r[S_VAL]]);
+  });
+  return aoa;
+}
+function movAOA(){
+  var aoa=[["Documento","Fecha","Clase","Texto clase","Centro","Almacen","Area","Material","Descripcion","UM",
+            "Cantidad","Importe","Orden","Usuario","Referencia","Texto cabecera"]];
+  D.mov.forEach(function(r){
+    aoa.push([r[M_DOC],r[M_FEC],r[M_CLS],r[M_TCL],r[M_CEN],r[M_ALM],r[M_ARE],r[M_MAT],desc(r[M_MAT]),r[M_UM],
+              r[M_CTD],r[M_IMP],r[M_ORD],r[M_USR],r[M_REF],r[M_TXT]]);
+  });
+  return aoa;
+}
+$("#expXlsx").addEventListener("click",async function(){
+  var b=this, txt=b.textContent;
+  b.disabled=true; b.textContent="Armando Excel…";
+  try{
+    if(!ST.movListo){ b.textContent="Cargando movimientos…"; await cargarMov(); b.textContent="Armando Excel…"; }
+    var X=await loadXLSX();
+    var wb=X.utils.book_new();
+    var h1=X.utils.aoa_to_sheet(areaAOA());
+    h1["!cols"]=[{wch:16},{wch:24},{wch:24},{wch:12},{wch:12},{wch:14}];
+    X.utils.book_append_sheet(wb,h1,"Resumen por área");
+    var h2=X.utils.aoa_to_sheet(matAOA());
+    h2["!cols"]=[{wch:12},{wch:44},{wch:8},{wch:10},{wch:22},{wch:14},{wch:26},{wch:6},{wch:16},{wch:16}];
+    X.utils.book_append_sheet(wb,h2,"Base de materiales");
+    var h3=X.utils.aoa_to_sheet(movAOA());
+    h3["!cols"]=[{wch:14},{wch:12},{wch:8},{wch:20},{wch:8},{wch:10},{wch:14},{wch:12},{wch:44},{wch:6},
+                 {wch:12},{wch:14},{wch:14},{wch:14},{wch:14},{wch:26}];
+    X.utils.book_append_sheet(wb,h3,"Base de movimientos");
+    var buf=X.write(wb,{bookType:"xlsx",type:"array",compression:true});
+    await bajar("stock_pdi_"+String(D.meta.stockDate||"").replace(/-/g,"")+".xlsx", buf,
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  }catch(e){
+    if(e&&e.code==="declined") toast("Descarga cancelada.");
+    else if(e&&e.code==="unavailable") toast("La descarga no está disponible en esta vista.");
+    else toast("No se pudo armar el Excel: "+((e&&e.message)||"error inesperado"));
+  }
+  b.disabled=false; b.textContent=txt;
+});
+
+$("#expMov").addEventListener("click",function(){ conMov(expMovCSV); });
+function expMovCSV(){
+  var head=["Documento","Fecha","Clase","Texto clase","Centro","Almacen","Area","Material","Descripcion","UM",
+            "Cantidad","Importe","Orden","Usuario","Referencia","Texto cabecera"];
+  var body=movFiltered().map(function(r){
+    return [r[M_DOC],r[M_FEC],r[M_CLS],r[M_TCL],r[M_CEN],r[M_ALM],r[M_ARE],r[M_MAT],desc(r[M_MAT]),r[M_UM],
+            r[M_CTD].toFixed(3),r[M_IMP].toFixed(2),r[M_ORD],r[M_USR],r[M_REF],r[M_TXT]];});
+  save("base_movimientos_"+(D.meta.stockDate||"")+".csv", csv([head].concat(body)));
+}
+
+function modoAlojado(){
+  $("#ghCard").classList.remove("hide");
+  $("#btnBajar").classList.remove("hide");
+  var c=ghLeer();
+  $("#ghOwner").value=c.owner||""; $("#ghRepo").value=c.repo||"";
+  $("#ghBranch").value=c.branch||"main"; $("#ghToken").value=c.token||"";
+  ghEstado();
+  $("#cmoPub").innerHTML=
+    "<li><b>Publicar para todos</b> — si configuraste la publicación automática, sube los tres archivos "+
+    "al repositorio en un solo commit y listo. Si no, te los descarga para que los subas a mano.</li>"+
+    "<li><b>Descargar los datos</b> — obtiene los tres JSON sin publicar, por si quieres revisarlos o "+
+    "guardarlos aparte.</li>"+
+    "<li><b>Ver en mi pantalla</b> — aplica los archivos solo para ti, para revisar un corte antes de publicarlo.</li>"+
+    "<li><b>Descargar reporte (.html)</b> — se lleva lo que ves en un archivo que abre solo, sin servidor.</li>";
+  $("#permNota").textContent="Este reporte está alojado como sitio estático: no hay cuentas ni permisos. "+
+    "La clave abre la ingesta, y quien tenga el token del repositorio es quien puede publicar.";
+}
+function ghEstado(){
+  var c=ghCfg();
+  if(ghListo(c)) ghMsg("Configurado: <b>"+esc(c.owner)+"/"+esc(c.repo)+"</b>, rama <b>"+esc(c.branch)+
+    "</b>. El botón <b>Publicar para todos</b> sube los datos solo.","good");
+  else ghMsg("Sin configurar: el botón de publicar te descargará los archivos para subirlos a mano.");
+}
+$("#ghSave").addEventListener("click",function(){
+  var c=ghCfg();
+  if(!ghListo(c)){ ghMsg("Faltan datos: usuario, repositorio y token son obligatorios.","bad"); return; }
+  if(ghGuardar(c)) ghEstado();
+  else ghMsg("No se pudo guardar en este navegador. Igual funciona mientras no cierres la pestaña.","bad");
+});
+$("#ghClear").addEventListener("click",function(){
+  try{ localStorage.removeItem(GH_KEY); }catch(e){}
+  $("#ghToken").value="";
+  ghMsg("Token borrado de este navegador.","");
+});
+$("#ghTest").addEventListener("click",async function(){
+  var c=ghCfg();
+  if(!ghListo(c)){ ghMsg("Completa usuario, repositorio y token antes de probar.","bad"); return; }
+  this.disabled=true; ghMsg("Probando…","");
+  try{
+    var r=await ghApi(c,"/git/ref/heads/"+encodeURIComponent(c.branch));
+    ghMsg("Conexión correcta con <b>"+esc(c.owner)+"/"+esc(c.repo)+"</b>, rama <b>"+esc(c.branch)+
+      "</b> (commit "+r.object.sha.slice(0,7)+"). El token puede escribir.","good");
+  }catch(e){ ghMsg(esc(e.message||"No se pudo conectar."),"bad"); }
+  this.disabled=false;
+});
+$("#btnBajar").addEventListener("click",async function(){
+  if(!ST.pendS&&!ST.pendM&&!ST.pendO) return;
+  this.disabled=true;
+  try{
+    if(!ST.movListo) await cargarMov();
+    if(!ST.areasListo) try{ await cargarAreas(); }catch(e){}
+    var a=armar(), f=datosComoArchivos(a.nd);
+    await bajar("base.json", f["base.json"], "application/json");
+    await bajar("mov.json", f["mov.json"], "application/json");
+    await bajar("areas.json", f["areas.json"], "application/json");
+    pmsg("Descargados los tres archivos con "+resumen(a)+". No se publicó nada todavía.","good");
+  }catch(e){ pmsg("No se pudieron generar los archivos: "+((e&&e.message)||"error"),"bad"); }
+  this.disabled=false; pubReady();
+});
+
+if(EMBEBIDO){
+  paint();
+}else{
+  $("#gRep").querySelector("tbody").innerHTML='<tr><td class="empty">Cargando datos…</td></tr>';
+  fetch("data/base.json",{cache:"no-store"})
+    .then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(j){
+      D.meta=j.meta||{}; D.mats=j.mats||{}; D.stock=j.stock||[]; D.mov=[]; D.hist=j.hist||{}; D.histT=j.histT||{};
+      if(j.cfg){ D.cfg.puestos=j.cfg.puestos||D.cfg.puestos;
+                 D.cfg.cabeceras=j.cfg.cabeceras||D.cfg.cabeceras;
+                 D.cfg.claves=j.cfg.claves||D.cfg.claves; }
+      paint(); modoAlojado();
+    })
+    .catch(function(e){
+      $("#gRep").querySelector("tbody").innerHTML='<tr><td class="empty">No se pudieron cargar los datos ('+
+        esc(e.message||"error de red")+'). Revisa que exista <code>data/base.json</code> junto a esta página.</td></tr>';
+      modoAlojado();
+    });
+}
+
+var CL=(window.claude&&window.claude.use)?window.claude:{use:function(){return Promise.resolve(null);}};
+CL.use("artifact").then(function(a){ST.art=a;}).catch(function(){});
+/* incrustada en el artefacto, descargar exige la capacidad; alojada, basta el navegador */
+CL.use("downloads").then(function(d){
+  ST.dl=d;
+  if(!d&&EMBEBIDO) $$("#expRep,#expMat,#expMov,#expXlsx,#btnFile").forEach(function(b){b.classList.add("hide");});
+}).catch(function(){});
+
+})();
+</script>
+
+</body>
+</html>
