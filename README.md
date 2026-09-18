@@ -156,3 +156,12 @@ EE00, almacén EEMT, códigos de material de 6 dígitos), por eso no se cruzan c
     de periodo (ej. `AGOSTO-2024`) quedan tal cual. Se puede buscar un LCL en el buscador.
 - **Texto clase de mov.** no existía en el histórico: se derivó de la clase (261 SM para orden,
   262 DM para orden, 221 SM para proyecto).
+
+
+## Clases de movimiento
+
+Solo cuentan consumos y devoluciones: **261** SM para orden, **262** DM para orden,
+**221** SM para proyecto y **222** DM para proyecto. Cualquier otra clase (561 entrada inicial
+de stock, 101/102 recepciones, 301/309/311/312/343/641 traslados…) se descarta al leer el
+Excel —la ingesta muestra cuántas filas de cada clase quitó—, al cargar el historial publicado
+y al publicar. La lista está en `CLASES_OK` dentro de `index.html`.

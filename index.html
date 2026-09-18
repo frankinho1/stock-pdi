@@ -432,7 +432,7 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
     </div>
     <div class="drop" id="dropM">
       <h3>Archivo de movimientos <span class="badge">acumula</span></h3>
-      <div class="hint">MOV_EXPORT_AAAAMMDD_HHMMSS.xlsx</div>
+      <div class="hint">MOV_EXPORT_AAAAMMDD_HHMMSS.xlsx · solo entran las clases 261, 262, 221 y 222</div>
       <input type="file" id="fileM" accept=".xlsx,.xlsm,.xls">
       <div class="state" id="stM">Sin archivo seleccionado.</div>
       <label class="chk" style="margin-top:11px"><input type="checkbox" id="chkReset">
@@ -572,6 +572,11 @@ var M_BASE=14;
 /* solo en el histórico congelado: 15 = área original del Excel, 16 = Tipo Instalación.
    En esas filas, Referencia ya trae absorbido el LCL (Referencia | LCL-630…). */
 var H_AOR=15, H_TIP=16;
+/* solo consumos y devoluciones: 261/262 a orden, 221/222 a proyecto. Todo lo demás
+   (561 entrada inicial, 101 recepciones, 3xx/641 traslados…) se descarta al leer el Excel,
+   al cargar el historial publicado y al publicar. */
+var CLASES_OK=["261","262","221","222"];
+function claseOk(c){ return CLASES_OK.indexOf(String(c==null?"":c).trim())>=0; }
 
 /* Dos formas de vivir, mismo código:
    — incrustada (artefacto): los datos vienen en el bloque DATA de arriba.
@@ -634,6 +639,7 @@ function resolverAreas(rows, ordenes, areaDoc, cfg){
 }
 /* filas viejas guardadas con 14 campos: se les abre el hueco del área */
 D.mov.forEach(function(r){ if(r.length<15) r[M_ARE]=r[M_ARE]||""; });
+D.mov=D.mov.filter(function(r){ return claseOk(r[M_CLS]); });
 
 var ST={art:null,dl:null,admin:false,metric:"val",esp:false,
         repSort:{k:"__tot",d:-1},matSort:{k:0,d:1},movPage:0,pendS:null,pendM:null,pendO:null,
@@ -684,8 +690,18 @@ function cargarMov(){
     if(!r.ok) throw new Error("HTTP "+r.status);
     return r.json();
   }), cargarHist()]).then(function(res){ var j=res[0];
-    D.mov=Array.isArray(j)?j:(j.mov||[]);
+    D.mov=(Array.isArray(j)?j:(j.mov||[])).filter(function(r){ return claseOk(r[M_CLS]); });
+    D.movH=(D.movH||[]).filter(function(r){ return claseOk(r[M_CLS]); });
     ST.movListo=true; ST.movCargando=null;
+    /* el periodo y el conteo salen de lo que quedó tras el filtro de clases */
+    var rg0=rango(D.mov), f0=D.meta.movFrom, t0=D.meta.movTo;
+    if(rg0.from){ D.meta.movFrom=rg0.from; D.meta.movTo=rg0.to; }
+    if(movOrigen()==="act"){
+      if(!$("#fDesde").value||$("#fDesde").value===f0) $("#fDesde").value=D.meta.movFrom||"";
+      if(!$("#fHasta").value||$("#fHasta").value===t0) $("#fHasta").value=D.meta.movTo||"";
+    }
+    $("#sMov").textContent=D.mov.length.toLocaleString("en-US");
+    $("#sMovD").textContent=D.meta.movFrom?fdate(D.meta.movFrom)+" – "+fdate(D.meta.movTo):"sin datos";
     fillMovFilters(); notaMov();
     if(D.meta.movFrom&&!$("#fDesde").value) $("#fDesde").value=D.meta.movFrom;
     if(D.meta.movTo&&!$("#fHasta").value) $("#fHasta").value=D.meta.movTo;
@@ -1332,12 +1348,14 @@ async function readMov(file){
   var X=await loadXLSX(), wb=await readWB(X,file);
   var t=findTable(X,wb,COLS_M,"movimientos");
   var ix={}; COLS_M.forEach(function(c){ix[c]=t.hdr.indexOf(c);});
-  var rows=[], dic={}, skip=0;
+  var rows=[], dic={}, skip=0, skipCls={};
   for(var i=t.row+1;i<t.aoa.length;i++){
     var a=t.aoa[i]; if(!a) continue;
     var doc=sv(a[ix["Documento material"]]); if(!doc) continue;
     var mat=sv(a[ix["Material"]]);
     if(isServicio(mat)){ skip++; continue; }
+    var cl=sv(a[ix["Clase de movimiento"]]);
+    if(!claseOk(cl)){ skipCls[cl||"(vacía)"]=(skipCls[cl||"(vacía)"]||0)+1; continue; }
     var de=sv(a[ix["Descripción material"]]);
     if(mat&&de&&!dic[mat]) dic[mat]=de;
     rows.push([doc,dv(a[ix["Fecha contabiliz."]]),sv(a[ix["Clase de movimiento"]]),sv(a[ix["Centro"]]),
@@ -1346,7 +1364,7 @@ async function readMov(file){
       sv(a[ix["Nombre del usuario"]]),sv(a[ix["Referencia"]]),sv(a[ix["Texto cab.documento"]]),""]);
   }
   if(!rows.length) throw new Error("El archivo de movimientos no tiene filas utilizables.");
-  return {rows:rows,dic:dic,skip:skip,sheet:t.sheet,name:file.name};
+  return {rows:rows,dic:dic,skip:skip,skipCls:skipCls,sheet:t.sheet,name:file.name};
 }
 /* export de órdenes (IW39): deja orden -> área ya calculada */
 async function readOrdenes(file){
@@ -1462,6 +1480,9 @@ $("#fileM").addEventListener("change",async function(){
     state("#stM","<b>"+esc(f.name)+"</b> · hoja «"+esc(d.sheet)+"»<br>"+
       d.rows.length.toLocaleString("en-US")+" movimientos leídos · "+esc(rg.from||"—")+" a "+esc(rg.to||"—")+
       (d.skip?"<br>"+d.skip.toLocaleString("en-US")+" filas de servicio (material S…) descartadas":"")+
+      (Object.keys(d.skipCls).length?"<br>"+Object.keys(d.skipCls).sort().map(function(c){
+        return d.skipCls[c].toLocaleString("en-US")+" de clase "+esc(c);}).join(" · ")+
+        " descartadas (solo entran 261, 262, 221 y 222)":"")+
       "<br><span style='color:var(--ink-3)'>"+prev.added.toLocaleString("en-US")+
       " nuevos respecto al historial · quedaría en "+prev.rows.length.toLocaleString("en-US")+"</span>","ok");
   }catch(e){ ST.pendM=null; state("#stM",esc(e.message),"bad"); }
@@ -1594,10 +1615,11 @@ function armar(){
     nd.meta.stockDate=$("#inCorte").value||corteFromName(ST.pendS.name)||nd.meta.stockDate||"";
     nd.meta.stockTime=horaFromName(ST.pendS.name)||ST.pendHora||"";
   }
+  nd.mov=nd.mov.filter(function(r){ return claseOk(r[M_CLS]); });
   if(ST.pendM){
     var mg = $("#chkReset").checked
       ? {rows:ordenar(ST.pendM.rows.slice()), added:ST.pendM.rows.length}
-      : mergeMov(D.mov, ST.pendM.rows);
+      : mergeMov(nd.mov, ST.pendM.rows);
     nd.mov=mg.rows; nuevos=mg.added;
     nd.mats=Object.assign({},nd.mats,ST.pendM.dic);
     var rg=rango(mg.rows);
