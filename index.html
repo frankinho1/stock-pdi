@@ -624,7 +624,7 @@ function areaDeOrden(puesto, textoBreve, cfg){
 }
 /* calcula el área de cada movimiento y va congelando el histórico */
 function resolverAreas(rows, ordenes, areaDoc, cfg){
-  var res={porOrden:0,porDoc:0,porTexto:0,sin:0};
+  var res={porOrden:0,porDoc:0,porTexto:0,porAlmacen:0,sin:0};
   rows.forEach(function(r){
     var a="", o=String(r[M_ORD]||"").trim();
     if(o && ordenes[o]){ a=ordenes[o]; res.porOrden++; areaDoc[docKey(r[M_DOC])]=a; }
@@ -632,6 +632,11 @@ function resolverAreas(rows, ordenes, areaDoc, cfg){
       if(areaDoc[d]){ a=areaDoc[d]; res.porDoc++; } }
     if(!a){ var t=String(r[M_TXT]||"").trim();
       if(t && cfg.cabeceras[t]){ a=cfg.cabeceras[t]; res.porTexto++; } }
+    /* último recurso: el área del almacén de donde salió el material.
+       No se congela en areaDoc a propósito: si mañana llega el IW39 con esa orden,
+       gana la orden y el movimiento se reclasifica solo. */
+    if(!a){ var al=area(r[M_ALM]);
+      if(al && al!==r[M_ALM]){ a=al; res.porAlmacen++; } }
     if(!a) res.sin++;
     r[M_ARE]=a;
   });
@@ -658,6 +663,17 @@ function comp(v){var a=Math.abs(v||0);
   if(a>=1e3) return "S/ "+(v/1e3).toFixed(0)+" K";
   return money(v);}
 function area(a){return AREA[a]||a||"—";}
+/* red de seguridad para lo ya publicado: al que quedó sin área se le pone la del almacén.
+   Es solo de presentación; al volver a ingestar, resolverAreas manda. */
+function areaPorAlmacen(rows){
+  var n=0;
+  (rows||[]).forEach(function(r){
+    if(r[M_ARE]) return;
+    var al=area(r[M_ALM]);
+    if(al&&al!==r[M_ALM]){ r[M_ARE]=al; n++; }
+  });
+  return n;
+}
 var toastT=null;
 function toast(msg){
   var t=$("#toast"); if(!t)return;
@@ -692,6 +708,7 @@ function cargarMov(){
   }), cargarHist()]).then(function(res){ var j=res[0];
     D.mov=(Array.isArray(j)?j:(j.mov||[])).filter(function(r){ return claseOk(r[M_CLS]); });
     D.movH=(D.movH||[]).filter(function(r){ return claseOk(r[M_CLS]); });
+    areaPorAlmacen(D.mov);
     ST.movListo=true; ST.movCargando=null;
     /* el periodo y el conteo salen de lo que quedó tras el filtro de clases */
     var rg0=rango(D.mov), f0=D.meta.movFrom, t0=D.meta.movTo;
@@ -1651,6 +1668,7 @@ function resumen(a){
   if(a.conMov) p.push(a.nuevos.toLocaleString("en-US")+" movimientos nuevos, historial en "+
     a.nd.mov.length.toLocaleString("en-US"));
   if(a.conOrd) p.push(Object.keys(a.nd.ordenes).length.toLocaleString("en-US")+" órdenes conocidas");
+  if(a.area&&a.area.porAlmacen) p.push(a.area.porAlmacen.toLocaleString("en-US")+" por almacén");
   if(a.conStock) p.push("evolutivo con "+Object.keys(a.nd.hist).length+" cortes");
   if(a.area) p.push("área resuelta en "+(a.nd.mov.length-a.area.sin).toLocaleString("en-US")+
     " de "+a.nd.mov.length.toLocaleString("en-US")+" movimientos");
@@ -1927,6 +1945,7 @@ if(EMBEBIDO){
      muestre las mismas cifras que el reporte publicado */
   D.mov=(D.mov||[]).filter(function(r){ return claseOk(r[M_CLS]); });
   D.movH=(D.movH||[]).filter(function(r){ return claseOk(r[M_CLS]); });
+  areaPorAlmacen(D.mov);
   paint();
 }else{
   $("#gRep").querySelector("tbody").innerHTML='<tr><td class="empty">Cargando datos…</td></tr>';
