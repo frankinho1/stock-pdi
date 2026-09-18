@@ -414,7 +414,7 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
     <div class="sec-lead">
       <p class="eyebrow">Solo modo editor</p>
       <h2>Ingesta de archivos<span class="rule"></span></h2>
-      <p class="sec-sub">Los Excel se leen aquí mismo en el navegador; al publicar se genera una nueva versión de esta página.</p>
+      <p class="sec-sub">Stock · movimientos · órdenes. Se procesan en el navegador.</p>
     </div>
   </div>
 
@@ -1024,9 +1024,8 @@ function renderRep(){
   g.querySelector("tfoot").innerHTML=tf+'<td class="n">'+(isVal?moneyC(gt):num(gt))+'</td></tr>';
   $("#repCount").textContent=rows.length.toLocaleString("en-US")+" materiales"+
     (rows.length>lim?" · mostrando los "+lim+" primeros del orden actual":"");
-  $("#repNote").innerHTML=(isVal?"Suma de <b>Valor libre util.</b> (PEN)":"Suma de <b>Libre utilización</b> (UM base)")+
-    " por material y almacén · <b>"+rows.length.toLocaleString("en-US")+"</b> materiales en "+
-    "<b>"+alm.length+"</b> almacenes.";
+  $("#repNote").innerHTML="<b>"+rows.length.toLocaleString("en-US")+"</b> materiales · <b>"+
+    alm.length+"</b> almacenes · "+(isVal?"valor libre util. en S/":"cantidad en UM base");
 }
 $("#gRep").querySelector("thead").addEventListener("click",function(e){
   var th=e.target.closest("th"); if(!th||!th.dataset.k)return;
@@ -1139,12 +1138,10 @@ function rangoOrigen(){
 }
 function notaMov(){
   var h=D.histMeta;
-  $("#movNote").innerHTML="Historial acumulado de consumos y devoluciones: <b>"+
-    D.mov.length.toLocaleString("en-US")+"</b> movimientos entre <b>"+fdate(D.meta.movFrom)+"</b> y <b>"+
-    fdate(D.meta.movTo)+"</b>. Cada ingesta suma lo que aún no está."+
-    (h&&D.movH.length?"<br>Además, <b>"+D.movH.length.toLocaleString("en-US")+"</b> movimientos del "+
-      "<b>histórico SAP anterior</b> ("+fdate(h.desde)+" – "+fdate(h.hasta)+"), congelados: se consultan "+
-      "con el filtro <b>Origen</b> y ninguna ingesta los modifica.":"");
+  $("#movNote").innerHTML="<b>"+(D.mov.length||D.meta.movRows||0).toLocaleString("en-US")+
+    "</b> movimientos · <b>"+fdate(D.meta.movFrom)+"</b> a <b>"+fdate(D.meta.movTo)+"</b>"+
+    (h&&D.movH.length?" · histórico SAP anterior <b>"+D.movH.length.toLocaleString("en-US")+
+      "</b> · <b>"+fdate(h.desde)+"</b> a <b>"+fdate(h.hasta)+"</b>":"");
 }
 function movFiltered(){
   var q=$("#qMov").value.trim().toLowerCase(), d1=$("#fDesde").value, d2=$("#fHasta").value,
@@ -1185,7 +1182,10 @@ function renderMov(){
        '</td><td class="desc">'+esc(r[M_TXT])+'</td>'+
        (tip?'<td>'+(r[H_TIP]?esc(r[H_TIP]):'<span class="zero">—</span>')+'</td>':'')+'</tr>';
   });
-  if(!page.length) h+='<tr><td colspan="'+(tip?16:15)+'" class="empty">Sin movimientos para el filtro.</td></tr>';
+  if(!page.length) h+='<tr><td colspan="'+(tip?16:15)+'" class="empty">'+
+    ($("#fMovOri").value!=="act"&&!(D.movH&&D.movH.length)
+      ? "Este borrador no incluye el histórico del SAP anterior: vive solo en el reporte publicado."
+      : "Sin movimientos para el filtro.")+'</td></tr>';
   var ti=0,tc=0; rows.forEach(function(r){ti+=r[M_IMP]; tc+=r[M_CTD];});
   h+='</tbody><tfoot><tr><td colspan="9">Total filtrado</td><td class="n">'+num(tc)+'</td><td class="n">'+
      moneyC(ti)+'</td><td colspan="'+(tip?5:4)+'"></td></tr></tfoot></table>';
@@ -1260,9 +1260,8 @@ function paint(){
   $("#sMovD").textContent=D.meta.movFrom?fdate(D.meta.movFrom)+" – "+fdate(D.meta.movTo):"sin datos";
   $("#fMatAlm").innerHTML='<option value="">Todos</option>'+alm.map(function(a){
     return '<option value="'+esc(a)+'">'+esc(a)+" · "+esc(area(a))+"</option>";}).join("");
-  $("#matNote").innerHTML="Detalle del corte al <b>"+fdate(D.meta.stockDate)+"</b>: <b>"+
-    D.stock.length.toLocaleString("en-US")+"</b> posiciones de material por almacén, por <b>"+money(tot)+
-    "</b>. Cada corte reemplaza al anterior.";
+  $("#matNote").innerHTML="<b>"+D.stock.length.toLocaleString("en-US")+"</b> posiciones · <b>"+
+    money(tot)+"</b> · corte <b>"+fdate(D.meta.stockDate)+(D.meta.stockTime?" "+D.meta.stockTime:"")+"</b>";
   notaMov();
   $("#footStamp").textContent="Publicado "+String(D.meta.updatedAt||"").replace("T"," ").slice(0,16)+
     (D.meta.updatedBy?" por "+D.meta.updatedBy:"");
@@ -1924,6 +1923,10 @@ $("#btnBajar").addEventListener("click",async function(){
 });
 
 if(EMBEBIDO){
+  /* la misma regla de clases que en la versión alojada, para que el borrador
+     muestre las mismas cifras que el reporte publicado */
+  D.mov=(D.mov||[]).filter(function(r){ return claseOk(r[M_CLS]); });
+  D.movH=(D.movH||[]).filter(function(r){ return claseOk(r[M_CLS]); });
   paint();
 }else{
   $("#gRep").querySelector("tbody").innerHTML='<tr><td class="empty">Cargando datos…</td></tr>';
