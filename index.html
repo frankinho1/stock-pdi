@@ -207,6 +207,10 @@ table.grid td.neg{color:var(--neg)}
 table.grid tfoot td{position:sticky; bottom:0; background:var(--surface-3); font-weight:700; padding:8px 11px;
   border-top:1px solid var(--line-2);}
 table.grid tfoot td.n{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums;}
+.hist td{background:var(--surface-2)}
+table.grid tr.hist:hover td{background:var(--surface-3)}
+.lock{font-family:var(--cond); font-size:10.5px; letter-spacing:.08em; padding:0 5px; margin-right:6px; border-radius:3px;
+  border:1px solid var(--line-2); color:var(--ink-3); vertical-align:1px;}
 .badge{font-family:var(--cond); font-size:12px; letter-spacing:.06em; padding:1px 7px; border-radius:3px;
   border:1px solid var(--line-2); background:var(--surface-2); color:var(--ink-2);}
 .tfoot-note{display:flex; gap:14px; flex-wrap:wrap; align-items:center; font-size:12.5px; color:var(--ink-3);
@@ -390,11 +394,16 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
   </div>
   <div class="controls">
     <input type="text" class="search" id="qMov" placeholder="Buscar material, descripción, orden, documento…">
+    <label class="lbl">Origen <select id="fMovOri">
+      <option value="act">Actual · SAP L003</option>
+      <option value="hist">Histórico SAP anterior (congelado)</option>
+      <option value="all">Todo</option></select></label>
     <label class="lbl">Desde <input type="date" id="fDesde"></label>
     <label class="lbl">Hasta <input type="date" id="fHasta"></label>
     <label class="lbl">Almacén <select id="fMovAlm"><option value="">Todos</option></select></label>
     <label class="lbl">Área <select id="fMovAre"><option value="">Todas</option></select></label>
     <label class="lbl">Clase <select id="fMovCls"><option value="">Todas</option></select></label>
+    <label class="lbl hide" id="lblMovTip">Tipo instalación <select id="fMovTip"><option value="">Todos</option></select></label>
   </div>
   <div class="tablebox" id="movBox"></div>
   <div class="tfoot-note"><span id="movCount">—</span><span class="pager" id="movPager"></span></div>
@@ -428,6 +437,8 @@ footer.foot{border-top:1px solid var(--line); margin-top:34px; padding:16px 0 40
       <div class="state" id="stM">Sin archivo seleccionado.</div>
       <label class="chk" style="margin-top:11px"><input type="checkbox" id="chkReset">
         Reemplazar el historial completo en vez de acumular</label>
+      <div class="hint" style="margin-top:6px">El histórico del SAP anterior (15.05.23 – 23.04.26) está congelado en
+        <code>data/historico.json</code>: esta ingesta nunca lo lee, lo reemplaza ni lo borra.</div>
     </div>
     <div class="drop" id="dropO">
       <h3>Export de órdenes <span class="badge">área</span></h3>
@@ -545,7 +556,7 @@ var TPL_CSS=CSSEL?CSSEL.outerHTML:"";
 
 var ADMIN_KEY="PAPERU2026";
 var AREA={C113:"COMERCIAL", C313:"COMERCIAL", E113:"EMERGENCIA BT/MT/AP",
-          F113:"FÍSICO", M113:"MTTO BT/MT/AP", O113:"OBRAS BT/MT/AP"};
+          F113:"FÍSICO", M113:"MTTO BT/MT/AP", O113:"OBRAS BT/MT/AP", EEMT:"HISTÓRICO SAP ANTERIOR"};
 var COLS_S=["Material","Centro","Almacén","Stock especial","Número de stock especial",
             "Unidad medida base","Libre utilización","Valor libre util."];
 var COLS_M=["Documento material","Fecha contabiliz.","Clase de movimiento","Centro","Almacén","Material",
@@ -558,6 +569,9 @@ var M_DOC=0,M_FEC=1,M_CLS=2,M_CEN=3,M_ALM=4,M_MAT=5,M_UM=6,M_CTD=7,M_IMP=8,
 /* los 14 primeros campos vienen de SAP e identifican al movimiento;
    el área (15º) es derivada, así que nunca entra en la comparación */
 var M_BASE=14;
+/* solo en el histórico congelado: 15 = área original del Excel, 16 = Tipo Instalación.
+   En esas filas, Referencia ya trae absorbido el LCL (Referencia | LCL-630…). */
+var H_AOR=15, H_TIP=16;
 
 /* Dos formas de vivir, mismo código:
    — incrustada (artefacto): los datos vienen en el bloque DATA de arriba.
@@ -588,6 +602,9 @@ D.histT=D.histT||{};            // fecha -> hora del corte que quedó ese día
 D.ordenes=D.ordenes||{};        // orden -> área
 D.areaDoc=D.areaDoc||{};        // documento -> área ya resuelta (el histórico)
 D.cfg=D.cfg||{};
+/* histórico congelado del SAP anterior (data/historico.json): se lee, se muestra y se descarga,
+   pero la ingesta nunca lo toca — ni al acumular, ni al recalcular áreas, ni con "Reemplazar". */
+D.movH=D.movH||[]; D.matsH=D.matsH||{}; D.histMeta=D.histMeta||null;
 D.cfg.puestos=D.cfg.puestos||CFG_DEF.puestos;
 D.cfg.cabeceras=D.cfg.cabeceras||CFG_DEF.cabeceras;
 D.cfg.claves=D.cfg.claves||CFG_DEF.claves;
@@ -620,7 +637,7 @@ D.mov.forEach(function(r){ if(r.length<15) r[M_ARE]=r[M_ARE]||""; });
 
 var ST={art:null,dl:null,admin:false,metric:"val",esp:false,
         repSort:{k:"__tot",d:-1},matSort:{k:0,d:1},movPage:0,pendS:null,pendM:null,pendO:null,
-        movListo:EMBEBIDO, movCargando:null, areasListo:EMBEBIDO, areasCargando:null,
+        movListo:EMBEBIDO, movCargando:null, histListo:false, histCargando:null, areasListo:EMBEBIDO, areasCargando:null,
         evolModo:"area", evolSel:[""]};
 
 function $(s){return document.querySelector(s);}
@@ -642,7 +659,7 @@ function toast(msg){
   clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove("on");},4200);
 }
 function fdate(s){if(!s)return"—";var p=String(s).split("-");return p.length===3?p[2]+"."+p[1]+"."+p[0].slice(2):s;}
-function desc(m){return D.mats[m]||"";}
+function desc(m){return D.mats[m]||(D.matsH&&D.matsH[m])||"";}
 function thr(){return D.meta.threshold||1500000;}
 
 /* descarga un archivo generado en el navegador: usa la capacidad del artefacto si está,
@@ -663,13 +680,13 @@ async function bajar(nombre, datos, mime){
 function cargarMov(){
   if(ST.movListo) return Promise.resolve();
   if(ST.movCargando) return ST.movCargando;
-  ST.movCargando = fetch("data/mov.json",{cache:"no-store"}).then(function(r){
+  ST.movCargando = Promise.all([fetch("data/mov.json",{cache:"no-store"}).then(function(r){
     if(!r.ok) throw new Error("HTTP "+r.status);
     return r.json();
-  }).then(function(j){
+  }), cargarHist()]).then(function(res){ var j=res[0];
     D.mov=Array.isArray(j)?j:(j.mov||[]);
     ST.movListo=true; ST.movCargando=null;
-    fillMovFilters();
+    fillMovFilters(); notaMov();
     if(D.meta.movFrom&&!$("#fDesde").value) $("#fDesde").value=D.meta.movFrom;
     if(D.meta.movTo&&!$("#fHasta").value) $("#fHasta").value=D.meta.movTo;
   }).catch(function(e){
@@ -677,6 +694,20 @@ function cargarMov(){
     throw e;
   });
   return ST.movCargando;
+}
+/* el histórico congelado: solo lectura, y si falta el archivo el reporte sigue igual */
+function cargarHist(){
+  if(ST.histListo) return Promise.resolve();
+  if(D.movH&&D.movH.length){ ST.histListo=true; return Promise.resolve(); }
+  if(ST.histCargando) return ST.histCargando;
+  ST.histCargando=fetch("data/historico.json",{cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(function(j){
+    D.movH=j.mov||[]; D.matsH=j.mats||{}; D.histMeta=j.meta||null;
+  }).catch(function(){ D.movH=[]; D.matsH={}; D.histMeta=null; })
+    .then(function(){ ST.histListo=true; ST.histCargando=null; notaMov(); fillMovFilters(); });
+  return ST.histCargando;
 }
 /* las tablas de área solo hacen falta para ingestar: se traen aparte */
 function cargarAreas(){
@@ -1074,42 +1105,74 @@ $("#fMatCero").addEventListener("change",renderMat);
 
 /* ---------- 03 base de movimientos ---------- */
 var PAGE=100;
+function movOrigen(){ var el=$("#fMovOri"); return el?el.value:"act"; }
+function movFuente(){
+  var o=movOrigen();
+  if(o==="hist") return D.movH||[];
+  if(o==="all") return (D.movH&&D.movH.length)?D.mov.concat(D.movH):D.mov;
+  return D.mov;
+}
+function esHist(r){ return r.length>15; }
+function conTip(){ return movOrigen()!=="act"; }
+/* al cambiar de origen, el rango de fechas se ajusta al periodo de ese origen */
+function rangoOrigen(){
+  var o=movOrigen(), h=D.histMeta||{};
+  if(o==="hist") return {d1:h.desde||"", d2:h.hasta||""};
+  if(o==="all") return {d1:h.desde||D.meta.movFrom||"", d2:D.meta.movTo||h.hasta||""};
+  return {d1:D.meta.movFrom||"", d2:D.meta.movTo||""};
+}
+function notaMov(){
+  var h=D.histMeta;
+  $("#movNote").innerHTML="Historial acumulado de consumos y devoluciones: <b>"+
+    D.mov.length.toLocaleString("en-US")+"</b> movimientos entre <b>"+fdate(D.meta.movFrom)+"</b> y <b>"+
+    fdate(D.meta.movTo)+"</b>. Cada ingesta suma lo que aún no está."+
+    (h&&D.movH.length?"<br>Además, <b>"+D.movH.length.toLocaleString("en-US")+"</b> movimientos del "+
+      "<b>histórico SAP anterior</b> ("+fdate(h.desde)+" – "+fdate(h.hasta)+"), congelados: se consultan "+
+      "con el filtro <b>Origen</b> y ninguna ingesta los modifica.":"");
+}
 function movFiltered(){
   var q=$("#qMov").value.trim().toLowerCase(), d1=$("#fDesde").value, d2=$("#fHasta").value,
-      fa=$("#fMovAlm").value, fc=$("#fMovCls").value, fr=$("#fMovAre").value;
-  return D.mov.filter(function(r){
+      fa=$("#fMovAlm").value, fc=$("#fMovCls").value, fr=$("#fMovAre").value,
+      ft=conTip()?$("#fMovTip").value:"";
+  return movFuente().filter(function(r){
     if(fa&&r[M_ALM]!==fa) return false;
     if(fc&&r[M_CLS]!==fc) return false;
     if(fr&&(r[M_ARE]||"(sin área)")!==fr) return false;
+    if(ft&&(r[H_TIP]||"(sin tipo)")!==ft) return false;
     if(d1&&r[M_FEC]<d1) return false;
     if(d2&&r[M_FEC]>d2) return false;
-    if(q&&(r[M_MAT]+" "+desc(r[M_MAT])+" "+r[M_ORD]+" "+r[M_DOC]+" "+r[M_USR]+" "+r[M_REF]+" "+r[M_TXT]+" "+r[M_ARE])
+    if(q&&(r[M_MAT]+" "+desc(r[M_MAT])+" "+r[M_ORD]+" "+r[M_DOC]+" "+r[M_USR]+" "+r[M_REF]+" "+r[M_TXT]+" "+r[M_ARE]+" "+(r[H_TIP]||""))
         .toLowerCase().indexOf(q)<0) return false;
     return true;
   });
 }
 function renderMov(){
-  var rows=movFiltered(), pages=Math.max(1,Math.ceil(rows.length/PAGE));
+  var tip=conTip(), rows=movFiltered(), pages=Math.max(1,Math.ceil(rows.length/PAGE));
   if(ST.movPage>=pages) ST.movPage=pages-1;
   var page=rows.slice(ST.movPage*PAGE, ST.movPage*PAGE+PAGE);
   var h='<table class="grid"><thead><tr><th>Documento</th><th>Fecha</th><th>Clase</th><th>Texto clase</th>'+
     '<th>Almacén</th><th>Área</th><th>Material</th><th>Descripción</th><th>UM</th><th class="n">Cantidad</th>'+
-    '<th class="n">Importe S/</th><th>Orden</th><th>Usuario</th><th>Referencia</th><th>Texto cabecera</th></tr></thead><tbody>';
+    '<th class="n">Importe S/</th><th>Orden</th><th>Usuario</th><th>Referencia</th><th>Texto cabecera</th>'+
+    (tip?'<th>Tipo instalación</th>':'')+'</tr></thead><tbody>';
   page.forEach(function(r){
-    h+='<tr><td class="c">'+esc(r[M_DOC])+'</td><td class="c">'+fdate(r[M_FEC])+'</td><td class="c">'+esc(r[M_CLS])+
+    var hi=esHist(r);
+    h+='<tr'+(hi?' class="hist" title="Histórico SAP anterior · congelado"':'')+'><td class="c">'+
+       (hi?'<span class="lock">HIST</span>':'')+esc(r[M_DOC])+'</td><td class="c">'+fdate(r[M_FEC])+'</td><td class="c">'+esc(r[M_CLS])+
        '</td><td>'+esc(r[M_TCL])+'</td><td class="c">'+esc(r[M_ALM])+'</td>'+
-       '<td>'+(r[M_ARE]?'<span class="badge">'+esc(r[M_ARE])+'</span>':'<span class="zero">—</span>')+
+       '<td'+(hi&&r[H_AOR]?' title="Área en el Excel histórico: '+esc(r[H_AOR])+'"':'')+'>'+
+       (r[M_ARE]?'<span class="badge">'+esc(r[M_ARE])+'</span>':'<span class="zero">—</span>')+
        '</td><td class="c">'+esc(r[M_MAT])+
        '</td><td class="desc">'+esc(desc(r[M_MAT])||"—")+'</td><td class="c">'+esc(r[M_UM])+
        '</td><td class="n'+(r[M_CTD]<0?" neg":"")+'">'+num(r[M_CTD])+
        '</td><td class="n'+(r[M_IMP]<0?" neg":"")+'">'+moneyC(r[M_IMP])+
        '</td><td class="c">'+esc(r[M_ORD])+'</td><td class="c">'+esc(r[M_USR])+'</td><td class="c">'+esc(r[M_REF])+
-       '</td><td class="desc">'+esc(r[M_TXT])+'</td></tr>';
+       '</td><td class="desc">'+esc(r[M_TXT])+'</td>'+
+       (tip?'<td>'+(r[H_TIP]?esc(r[H_TIP]):'<span class="zero">—</span>')+'</td>':'')+'</tr>';
   });
-  if(!page.length) h+='<tr><td colspan="15" class="empty">Sin movimientos para el filtro.</td></tr>';
+  if(!page.length) h+='<tr><td colspan="'+(tip?16:15)+'" class="empty">Sin movimientos para el filtro.</td></tr>';
   var ti=0,tc=0; rows.forEach(function(r){ti+=r[M_IMP]; tc+=r[M_CTD];});
   h+='</tbody><tfoot><tr><td colspan="9">Total filtrado</td><td class="n">'+num(tc)+'</td><td class="n">'+
-     moneyC(ti)+'</td><td colspan="4"></td></tr></tfoot></table>';
+     moneyC(ti)+'</td><td colspan="'+(tip?5:4)+'"></td></tr></tfoot></table>';
   $("#movBox").innerHTML=h;
   $("#movCount").textContent=rows.length.toLocaleString("en-US")+" movimientos · consumo neto S/ "+moneyC(ti);
   $("#movPager").innerHTML=
@@ -1123,14 +1186,21 @@ $("#movPager").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b||b.disabled)return;
   ST.movPage=Math.max(0,+b.dataset.g); renderMov(); $("#movBox").scrollTop=0;
 });
-["#qMov","#fDesde","#fHasta","#fMovAlm","#fMovAre","#fMovCls"].forEach(function(s){
+$("#fMovOri").addEventListener("change",function(){
+  var go=function(){ var r=rangoOrigen(); $("#fDesde").value=r.d1; $("#fHasta").value=r.d2;
+    ST.movPage=0; fillMovFilters(); renderMov(); };
+  if(movOrigen()!=="act"&&!ST.histListo){ $("#movBox").innerHTML='<div class="empty">Cargando histórico…</div>';
+    cargarHist().then(go); } else go();
+});
+["#qMov","#fDesde","#fHasta","#fMovAlm","#fMovAre","#fMovCls","#fMovTip"].forEach(function(s){
   var el=$(s);
   el.addEventListener((el.tagName==="SELECT"||el.type==="date")?"change":"input",
     function(){ST.movPage=0; renderMov();});
 });
 function fillMovFilters(){
-  var alm={}, cls={}, are={};
-  D.mov.forEach(function(r){alm[r[M_ALM]]=1; cls[r[M_CLS]]=r[M_TCL];
+  var alm={}, cls={}, are={}, tps={};
+  $("#lblMovTip").classList.toggle("hide",!conTip());
+  movFuente().forEach(function(r){ if(esHist(r)){ var tk=r[H_TIP]||"(sin tipo)"; tps[tk]=(tps[tk]||0)+1; }alm[r[M_ALM]]=1; cls[r[M_CLS]]=r[M_TCL];
     are[r[M_ARE]||"(sin área)"]=(are[r[M_ARE]||"(sin área)"]||0)+1;});
   var sel=$("#fMovAlm").value, selc=$("#fMovCls").value, sela=$("#fMovAre").value;
   $("#fMovAlm").innerHTML='<option value="">Todos</option>'+Object.keys(alm).sort().map(function(a){
@@ -1140,7 +1210,11 @@ function fillMovFilters(){
   $("#fMovAre").innerHTML='<option value="">Todas</option>'+Object.keys(are).sort(function(x,y){
     return are[y]-are[x];}).map(function(a){
     return '<option value="'+esc(a)+'">'+esc(a)+" · "+are[a].toLocaleString("en-US")+"</option>";}).join("");
-  $("#fMovAlm").value=sel; $("#fMovCls").value=selc; $("#fMovAre").value=sela;
+  var selt=$("#fMovTip").value;
+  $("#fMovTip").innerHTML='<option value="">Todos</option>'+Object.keys(tps).sort(function(x,y){
+    return tps[y]-tps[x];}).map(function(a){
+    return '<option value="'+esc(a)+'">'+esc(a)+" · "+tps[a].toLocaleString("en-US")+"</option>";}).join("");
+  $("#fMovAlm").value=sel; $("#fMovCls").value=selc; $("#fMovAre").value=sela; $("#fMovTip").value=selt;
 }
 
 /* ---------- pintado general ---------- */
@@ -1173,9 +1247,7 @@ function paint(){
   $("#matNote").innerHTML="Detalle del corte al <b>"+fdate(D.meta.stockDate)+"</b>: <b>"+
     D.stock.length.toLocaleString("en-US")+"</b> posiciones de material por almacén, por <b>"+money(tot)+
     "</b>. Cada corte reemplaza al anterior.";
-  $("#movNote").innerHTML="Historial acumulado de consumos y devoluciones: <b>"+
-    D.mov.length.toLocaleString("en-US")+"</b> movimientos entre <b>"+fdate(D.meta.movFrom)+"</b> y <b>"+
-    fdate(D.meta.movTo)+"</b>. Cada ingesta suma lo que aún no está.";
+  notaMov();
   $("#footStamp").textContent="Publicado "+String(D.meta.updatedAt||"").replace("T"," ").slice(0,16)+
     (D.meta.updatedBy?" por "+D.meta.updatedBy:"");
   fillMovFilters();
@@ -1514,7 +1586,7 @@ async function ghPublicar(c, archivos, mensaje, avance){
 function armar(){
   var nd={meta:Object.assign({},D.meta), mats:Object.assign({},D.mats), stock:D.stock, mov:D.mov,
           ordenes:Object.assign({},D.ordenes), areaDoc:Object.assign({},D.areaDoc),
-          cfg:leerCfg()}, nuevos=0;
+          cfg:leerCfg(), movH:D.movH, matsH:D.matsH, histMeta:D.histMeta}, nuevos=0;
   if(ST.pendO) Object.keys(ST.pendO.map).forEach(function(o){ nd.ordenes[o]=ST.pendO.map[o]; });
   if(ST.pendS){
     nd.stock=ST.pendS.rows;
@@ -1715,6 +1787,15 @@ function movAOA(){
   });
   return aoa;
 }
+function movHAOA(){
+  var aoa=[["Documento","Fecha","Clase","Texto clase","Centro","Almacen","Area","Material","Descripcion","UM",
+            "Cantidad","Importe","Orden","Usuario","Referencia + LCL","Texto cabecera","Area original","Tipo instalacion"]];
+  D.movH.forEach(function(r){
+    aoa.push([r[M_DOC],r[M_FEC],r[M_CLS],r[M_TCL],r[M_CEN],r[M_ALM],r[M_ARE],r[M_MAT],desc(r[M_MAT]),r[M_UM],
+              r[M_CTD],r[M_IMP],r[M_ORD],r[M_USR],r[M_REF],r[M_TXT],r[H_AOR]||"",r[H_TIP]||""]);
+  });
+  return aoa;
+}
 $("#expXlsx").addEventListener("click",async function(){
   var b=this, txt=b.textContent;
   b.disabled=true; b.textContent="Armando Excel…";
@@ -1732,6 +1813,11 @@ $("#expXlsx").addEventListener("click",async function(){
     h3["!cols"]=[{wch:14},{wch:12},{wch:8},{wch:20},{wch:8},{wch:10},{wch:14},{wch:12},{wch:44},{wch:6},
                  {wch:12},{wch:14},{wch:14},{wch:14},{wch:14},{wch:26}];
     X.utils.book_append_sheet(wb,h3,"Base de movimientos");
+    if(D.movH&&D.movH.length){
+      var h4=X.utils.aoa_to_sheet(movHAOA());
+      h4["!cols"]=h3["!cols"].concat([{wch:16},{wch:22}]);
+      X.utils.book_append_sheet(wb,h4,"Histórico SAP anterior");
+    }
     var buf=X.write(wb,{bookType:"xlsx",type:"array",compression:true});
     await bajar("stock_pdi_"+String(D.meta.stockDate||"").replace(/-/g,"")+".xlsx", buf,
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -1745,11 +1831,13 @@ $("#expXlsx").addEventListener("click",async function(){
 
 $("#expMov").addEventListener("click",function(){ conMov(expMovCSV); });
 function expMovCSV(){
+  var tip=conTip();
   var head=["Documento","Fecha","Clase","Texto clase","Centro","Almacen","Area","Material","Descripcion","UM",
-            "Cantidad","Importe","Orden","Usuario","Referencia","Texto cabecera"];
+            "Cantidad","Importe","Orden","Usuario","Referencia","Texto cabecera"].concat(tip?["Tipo instalacion"]:[]);
   var body=movFiltered().map(function(r){
     return [r[M_DOC],r[M_FEC],r[M_CLS],r[M_TCL],r[M_CEN],r[M_ALM],r[M_ARE],r[M_MAT],desc(r[M_MAT]),r[M_UM],
-            r[M_CTD].toFixed(3),r[M_IMP].toFixed(2),r[M_ORD],r[M_USR],r[M_REF],r[M_TXT]];});
+            r[M_CTD].toFixed(3),r[M_IMP].toFixed(2),r[M_ORD],r[M_USR],r[M_REF],r[M_TXT]]
+            .concat(tip?[r[H_TIP]||""]:[]);});
   save("base_movimientos_"+(D.meta.stockDate||"")+".csv", csv([head].concat(body)));
 }
 

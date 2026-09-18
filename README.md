@@ -9,6 +9,7 @@ base de datos ni cuenta de ningún servicio.
     data/base.json    corte de stock, descripciones de material y reglas de área
     data/mov.json     historial de movimientos, con su área ya calculada
     data/areas.json   órdenes conocidas e histórico de áreas resueltas
+    data/historico.json  movimientos del SAP anterior (15.05.2023 – 23.04.2026), congelados
     .nojekyll         evita que GitHub Pages procese los archivos
 
 La página carga `data/base.json` al abrir. `data/mov.json` se trae recién cuando alguien entra
@@ -127,3 +128,31 @@ Si falta alguna, la ingesta dice cuál y no genera nada.
   punto hay que subir con `git` desde la computadora.
 - La página usa SheetJS desde cdnjs para leer y escribir Excel, así que la ingesta y la
   descarga de Excel necesitan internet. Ver el reporte no lo necesita.
+
+
+## Histórico congelado (SAP anterior)
+
+`data/historico.json` guarda 42,651 movimientos del 15.05.2023 al 23.04.2026, tomados de la
+hoja DATA MOV. del Excel «CONTROL DE MATERIALES - PA PERÚ». Son del sistema anterior (centro
+EE00, almacén EEMT, códigos de material de 6 dígitos), por eso no se cruzan con el stock actual.
+
+- **Solo lectura.** La ingesta nunca lo lee, lo reemplaza ni lo borra: ni al acumular, ni al
+  recalcular áreas, ni con «Reemplazar el historial completo». La publicación automática solo
+  commitea `base.json`, `mov.json` y `areas.json`, así que este archivo queda intacto.
+  La única forma de cambiarlo es editarlo directamente en el repositorio.
+- **Dónde se ve.** Base de movimientos → filtro **Origen**: *Actual*, *Histórico SAP anterior*
+  o *Todo*. Las filas históricas van marcadas con **HIST**. El CSV descarga lo filtrado y el
+  Excel general suma una hoja «Histórico SAP anterior».
+- **Área.** Viene fija de la columna ÁREA del Excel histórico, llevada a las áreas del reporte:
+  OBRAS / OBRAS PAN → OBRAS · EBT → EBT · EMT → EMT · ULE → ULE · MP / PREVENTIVO → PREVENTIVO ·
+  CONEXIONES / CONEXIONES PAN / MNTO CNX / NORMALIZACIÓN / TOTALIZADOR(ES) / SMART METER → COMERCIAL ·
+  OBRAS AP → OBRAS AP. El valor original queda guardado y se ve al pasar el mouse por el área.
+  Dos filas de PRUEBA (un consumo y su anulación, neto cero) quedan sin área.
+- **Columnas solo del histórico** (lo nuevo no las trae):
+  - **Tipo instalación** (Libreto de Medida, Distinta WIN, SAP Estándar, Anulación distinta WIN):
+    columna y filtro propios, visibles con Origen = Histórico o Todo.
+  - **Referencia + LCL**: la Referencia del Excel absorbe la columna LCL, unidas con « | »
+    (ej. `TOTA.SMART-FEBRO | LCL-6300991548`). El LCL numérico va como `LCL-630…`; los textos
+    de periodo (ej. `AGOSTO-2024`) quedan tal cual. Se puede buscar un LCL en el buscador.
+- **Texto clase de mov.** no existía en el histórico: se derivó de la clase (261 SM para orden,
+  262 DM para orden, 221 SM para proyecto).
